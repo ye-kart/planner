@@ -6,6 +6,7 @@ import { registerGoalsCommand } from './goals.command.js';
 import { registerTasksCommand } from './tasks.command.js';
 import { registerHabitsCommand } from './habits.command.js';
 import { registerContextCommand } from './context.command.js';
+import { registerTuiCommand } from './tui.command.js';
 
 export function registerCommands(program: Command): void {
   registerInitCommand(program);
@@ -15,4 +16,5 @@ export function registerCommands(program: Command): void {
   registerTasksCommand(program);
   registerHabitsCommand(program);
   registerContextCommand(program);
+  registerTuiCommand(program);
 }
