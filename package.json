@@ -1,0 +1,52 @@
+{
+  "name": "planner-cli",
+  "version": "1.0.0",
+  "description": "A headless CLI life planner — organize areas, goals, tasks, and habits from the terminal",
+  "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "cli",
+    "planner",
+    "life-planner",
+    "goals",
+    "habits",
+    "tasks",
+    "productivity",
+    "streak",
+    "terminal"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "bin": {
+    "plan": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit",
+    "generate": "drizzle-kit generate",
+    "migrate": "tsx src/db/migrate.ts"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.1",
+    "commander": "^13.1.0",
+    "drizzle-orm": "^0.38.4",
+    "nanoid": "^5.1.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.13.1",
+    "drizzle-kit": "^0.30.4",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5"
+  }
+}

@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Database files
+*.db
+*.db-journal
+*.db-wal
+
+# Environment
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# AI agent configs
+.claude/
+.cursor/
+.copilot/
+.aider*
+.codeium/
+.continue/
+.windsurf/
+.cline/
+.roo/
+.augment/
+
+# Local overrides
+.local/
+
+# Drizzle generated (regenerate with `npm run generate`)
+drizzle/
+
+# Coverage
+coverage/
