@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { render, Box } from 'ink';
+import { render, Box, useApp } from 'ink';
 import { ThemeContext, themes, themeNames } from './themes/index.js';
 import type { Theme } from './themes/index.js';
 import { ServicesContext, type Container } from './hooks/use-services.js';
@@ -18,6 +18,7 @@ function App({ container, initialTheme }: AppProps) {
     themeNames.includes(initialTheme) ? initialTheme : 'neon'
   );
   const [searchActive, setSearchActive] = useState(false);
+  const [inputActive, setInputActive] = useState(false);
   const theme: Theme = themes[themeName]!;
 
   const cycleTheme = useCallback(() => {
@@ -29,8 +30,8 @@ function App({ container, initialTheme }: AppProps) {
 
   const { screen, goTo, next, prev } = useScreen(Screen.Dashboard);
 
-  const [exiting, setExiting] = useState(false);
-  const onQuit = useCallback(() => setExiting(true), []);
+  const { exit } = useApp();
+  const onQuit = useCallback(() => exit(), [exit]);
 
   useGlobalKeys({
     onQuit,
@@ -40,11 +41,8 @@ function App({ container, initialTheme }: AppProps) {
     prevScreen: prev,
     openSearch: () => setSearchActive(true),
     searchActive,
+    inputActive,
   });
-
-  if (exiting) {
-    return null;
-  }
 
   return (
     <ThemeContext.Provider value={{ theme, themeName, colors: theme.colors, cycleTheme }}>
@@ -54,6 +52,7 @@ function App({ container, initialTheme }: AppProps) {
             screen={screen}
             searchActive={searchActive}
             onSearchClose={() => setSearchActive(false)}
+            setInputActive={setInputActive}
           />
         </Box>
       </ServicesContext.Provider>

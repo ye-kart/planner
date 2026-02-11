@@ -9,13 +9,14 @@ interface UseGlobalKeysOptions {
   prevScreen: () => void;
   openSearch: () => void;
   searchActive: boolean;
+  inputActive: boolean;
 }
 
 export function useGlobalKeys(opts: UseGlobalKeysOptions): void {
   useInput((input, key) => {
-    if (opts.searchActive) return;
+    if (opts.searchActive || opts.inputActive) return;
 
-    if (input === 'q' || key.escape) {
+    if (input === 'q') {
       opts.onQuit();
       return;
     }
