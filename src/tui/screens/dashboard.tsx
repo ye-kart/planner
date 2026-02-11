@@ -41,23 +41,33 @@ export function DashboardScreen({ refreshKey, searchQuery }: DashboardProps) {
   const matchesSearch = (text: string) =>
     !searchQuery || text.toLowerCase().includes(searchQuery.toLowerCase());
 
+  // Habit progress bar
+  const { habitsDone, habitsDue } = data.summary;
+  const pct = habitsDue > 0 ? Math.round((habitsDone / habitsDue) * 100) : 0;
+  const barWidth = 20;
+  const filled = habitsDue > 0 ? Math.round((habitsDone / habitsDue) * barWidth) : 0;
+  const progressBar = '█'.repeat(filled) + '░'.repeat(barWidth - filled);
+
   return (
     <Box flexDirection="column" gap={1}>
       <Box gap={1}>
         <Panel title="📊 Summary">
-          <Text color={colors.textPrimary}>
-            <Text color={colors.textAccent} bold>{data.dateFormatted}</Text>
-          </Text>
+          <Text color={colors.textAccent} bold>{data.dateFormatted}</Text>
           <Text color={colors.textPrimary}>
             Tasks due: <Text color={data.summary.tasksDue > 0 ? colors.warning : colors.success} bold>{data.summary.tasksDue}</Text>
           </Text>
           <Text color={colors.textPrimary}>
-            Overdue: <Text color={data.summary.tasksOverdue > 0 ? colors.error : colors.success} bold>{data.summary.tasksOverdue}</Text>
+            Overdue:   <Text color={data.summary.tasksOverdue > 0 ? colors.error : colors.success} bold>{data.summary.tasksOverdue}</Text>
           </Text>
-          <Text color={colors.textPrimary}>
-            Habits: <Text color={colors.success} bold>{data.summary.habitsDone}</Text>
-            <Text color={colors.textSecondary}>/{data.summary.habitsDue}</Text>
-          </Text>
+          <Box gap={1}>
+            <Text color={colors.textPrimary}>Habits:</Text>
+            <Text color={colors.success} bold>{habitsDone}</Text>
+            <Text color={colors.textSecondary}>/{habitsDue}</Text>
+          </Box>
+          <Box gap={1}>
+            <Text color={pct === 100 ? colors.success : colors.accent1}>{progressBar}</Text>
+            <Text color={pct === 100 ? colors.success : colors.textSecondary}>{pct}%</Text>
+          </Box>
         </Panel>
 
         {topStreaks.length > 0 && (
@@ -100,15 +110,15 @@ export function DashboardScreen({ refreshKey, searchQuery }: DashboardProps) {
         </Panel>
       </Box>
 
-      <Panel title="✅ Today's Habits">
+      <Panel title={`✅ Today's Habits (${habitsDone}/${habitsDue})`}>
         {data.habitsDueToday.length === 0 ? (
           <Text color={colors.textSecondary} italic>No habits due today</Text>
         ) : (
-          <Box gap={2}>
+          <Box flexDirection="column">
             {data.habitsDueToday.filter(h => matchesSearch(h.title)).map(habit => (
               <Box key={habit.id} gap={1}>
                 <Text color={habit.done ? colors.success : colors.textSecondary}>
-                  {habit.done ? '●' : '○'}
+                  {habit.done ? '[x]' : '[ ]'}
                 </Text>
                 <Text
                   color={habit.done ? colors.success : colors.textPrimary}
