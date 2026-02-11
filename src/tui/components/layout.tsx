@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { TopBar } from './top-bar.js';
-import { BottomBar } from './bottom-bar.js';
 import { SearchOverlay } from './search-overlay.js';
 import { Screen } from '../types.js';
 import { useRefresh } from '../hooks/use-refresh.js';
@@ -68,8 +67,6 @@ export function Layout({ screen, searchActive, onSearchClose }: LayoutProps) {
         {screen === Screen.Tasks && <TasksScreen {...screenProps} />}
         {screen === Screen.Habits && <HabitsScreen {...screenProps} />}
       </Box>
-
-      <BottomBar screen={screen} />
     </Box>
   );
 }
