@@ -7,6 +7,7 @@ interface ListNavigatorProps<T> {
   renderItem: (item: T, index: number, selected: boolean) => ReactNode;
   onSelect?: (item: T, index: number) => void;
   onAction?: (key: string, item: T, index: number) => void;
+  onCursorChange?: (index: number) => void;
   active?: boolean;
   emptyMessage?: string;
 }
@@ -16,6 +17,7 @@ export function ListNavigator<T>({
   renderItem,
   onSelect,
   onAction,
+  onCursorChange,
   active = true,
   emptyMessage = 'No items',
 }: ListNavigatorProps<T>) {
@@ -32,10 +34,18 @@ export function ListNavigator<T>({
     if (!active || items.length === 0) return;
 
     if (input === 'j' || key.downArrow) {
-      setCursor(c => Math.min(c + 1, items.length - 1));
+      setCursor(c => {
+        const next = Math.min(c + 1, items.length - 1);
+        if (next !== c) onCursorChange?.(next);
+        return next;
+      });
     } else if (input === 'k' || key.upArrow) {
-      setCursor(c => Math.max(c - 1, 0));
-    } else if (key.return || input === ' ') {
+      setCursor(c => {
+        const next = Math.max(c - 1, 0);
+        if (next !== c) onCursorChange?.(next);
+        return next;
+      });
+    } else if (key.return) {
       onSelect?.(items[cursor]!, cursor);
     } else if (onAction) {
       onAction(input, items[cursor]!, cursor);

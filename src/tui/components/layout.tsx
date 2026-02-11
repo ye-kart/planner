@@ -15,9 +15,10 @@ interface LayoutProps {
   screen: Screen;
   searchActive: boolean;
   onSearchClose: () => void;
+  setInputActive: (active: boolean) => void;
 }
 
-export function Layout({ screen, searchActive, onSearchClose }: LayoutProps) {
+export function Layout({ screen, searchActive, onSearchClose, setInputActive }: LayoutProps) {
   const { colors } = useTheme();
   const [refreshKey, refresh] = useRefresh();
   const [searchQuery, setSearchQuery] = useState('');
@@ -39,7 +40,7 @@ export function Layout({ screen, searchActive, onSearchClose }: LayoutProps) {
     }
   });
 
-  const screenProps = { refreshKey, refresh, searchQuery };
+  const screenProps = { refreshKey, refresh, searchQuery, setInputActive };
 
   return (
     <Box flexDirection="column">

@@ -21,6 +21,8 @@ const themeValue = {
   cycleTheme: () => {},
 };
 
+const noop = () => {};
+
 function createWrapper() {
   const db = createTestDb();
   const container = createTestContainer(db);
@@ -109,7 +111,7 @@ describe('TUI Screens', () => {
       const { Wrapper } = createWrapper();
       const { lastFrame } = render(
         <Wrapper>
-          <AreasScreen refreshKey={0} refresh={() => {}} searchQuery="" />
+          <AreasScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} />
         </Wrapper>
       );
       const frame = lastFrame()!;
@@ -122,12 +124,26 @@ describe('TUI Screens', () => {
       const { Wrapper } = createWrapper();
       const { lastFrame } = render(
         <Wrapper>
-          <AreasScreen refreshKey={0} refresh={() => {}} searchQuery="work" />
+          <AreasScreen refreshKey={0} refresh={noop} searchQuery="work" setInputActive={noop} />
         </Wrapper>
       );
       const frame = lastFrame()!;
       expect(frame).toContain('Work');
       expect(frame).not.toContain('Health');
+    });
+
+    it('shows CRUD hints', () => {
+      const { Wrapper } = createWrapper();
+      const { lastFrame } = render(
+        <Wrapper>
+          <AreasScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} />
+        </Wrapper>
+      );
+      const frame = lastFrame()!;
+      expect(frame).toContain('detail');
+      expect(frame).toContain('add');
+      expect(frame).toContain('edit');
+      expect(frame).toContain('delete');
     });
   });
 
@@ -136,12 +152,27 @@ describe('TUI Screens', () => {
       const { Wrapper } = createWrapper();
       const { lastFrame } = render(
         <Wrapper>
-          <GoalsScreen refreshKey={0} refresh={() => {}} searchQuery="" />
+          <GoalsScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} />
         </Wrapper>
       );
       const frame = lastFrame()!;
       expect(frame).toContain('Goals');
       expect(frame).toContain('Learn TypeScript');
+    });
+
+    it('shows CRUD and filter hints', () => {
+      const { Wrapper } = createWrapper();
+      const { lastFrame } = render(
+        <Wrapper>
+          <GoalsScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} />
+        </Wrapper>
+      );
+      const frame = lastFrame()!;
+      expect(frame).toContain('detail');
+      expect(frame).toContain('add');
+      expect(frame).toContain('edit');
+      expect(frame).toContain('delete');
+      expect(frame).toContain('filter');
     });
   });
 
@@ -150,12 +181,29 @@ describe('TUI Screens', () => {
       const { Wrapper } = createWrapper();
       const { lastFrame } = render(
         <Wrapper>
-          <TasksScreen refreshKey={0} refresh={() => {}} searchQuery="" />
+          <TasksScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} />
         </Wrapper>
       );
       const frame = lastFrame()!;
       expect(frame).toContain('Tasks');
       expect(frame).toContain('Write tests');
+    });
+
+    it('shows CRUD and action hints', () => {
+      const { Wrapper } = createWrapper();
+      const { lastFrame } = render(
+        <Wrapper>
+          <TasksScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} />
+        </Wrapper>
+      );
+      const frame = lastFrame()!;
+      expect(frame).toContain('detail');
+      expect(frame).toContain('add');
+      expect(frame).toContain('edit');
+      expect(frame).toContain('delete');
+      expect(frame).toContain('done');
+      expect(frame).toContain('start');
+      expect(frame).toContain('filter');
     });
   });
 
@@ -164,12 +212,55 @@ describe('TUI Screens', () => {
       const { Wrapper } = createWrapper();
       const { lastFrame } = render(
         <Wrapper>
-          <HabitsScreen refreshKey={0} refresh={() => {}} searchQuery="" />
+          <HabitsScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} />
         </Wrapper>
       );
       const frame = lastFrame()!;
       expect(frame).toContain('Habits');
       expect(frame).toContain('Exercise');
+    });
+
+    it('shows contextual key hints', () => {
+      const { Wrapper } = createWrapper();
+      const { lastFrame } = render(
+        <Wrapper>
+          <HabitsScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} />
+        </Wrapper>
+      );
+      const frame = lastFrame()!;
+      expect(frame).toContain('toggle');
+      expect(frame).toContain('edit');
+      expect(frame).toContain('archive');
+      expect(frame).toContain('add');
+      expect(frame).toContain('delete');
+    });
+
+    it('shows edit hint for habit actions', () => {
+      const { Wrapper } = createWrapper();
+      const { lastFrame } = render(
+        <Wrapper>
+          <HabitsScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} />
+        </Wrapper>
+      );
+      const frame = lastFrame()!;
+      // Edit and archive hints are shown in the list view
+      expect(frame).toContain('e');
+      expect(frame).toContain('edit');
+      expect(frame).toContain('a');
+      expect(frame).toContain('archive');
+      expect(frame).toContain('toggle');
+    });
+
+    it('shows view toggle hint', () => {
+      const { Wrapper } = createWrapper();
+      const { lastFrame } = render(
+        <Wrapper>
+          <HabitsScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} />
+        </Wrapper>
+      );
+      const frame = lastFrame()!;
+      expect(frame).toContain('v');
+      expect(frame).toContain('all');
     });
   });
 });
