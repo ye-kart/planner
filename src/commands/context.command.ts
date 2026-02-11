@@ -6,7 +6,16 @@ import { today } from '../utils/date.js';
 export function registerContextCommand(program: Command): void {
   const context = program
     .command('context')
-    .description('AI agent context API — always outputs JSON');
+    .description('Structured JSON API for AI agents and scripts (always outputs JSON)')
+    .addHelpText('after', `
+Designed for piping into AI agents or scripts. Every subcommand returns
+structured JSON with fully resolved relationships (no extra lookups needed).
+
+Examples:
+  $ plan context today                 Today's snapshot as JSON
+  $ plan context goal <id>             Goal with area, milestones, tasks, habits
+  $ plan context all                   Full dump of everything
+  $ plan context area <id> | jq .goals Parse with jq`);
 
   context
     .command('goal <id>')
@@ -46,7 +55,7 @@ export function registerContextCommand(program: Command): void {
 
   context
     .command('today')
-    .description('Full today snapshot (same as status but structured)')
+    .description('Today\'s snapshot: due tasks, pending habits, streaks (JSON)')
     .action(() => {
       ensureInitialized();
       const { contextService } = getContainer();
@@ -55,7 +64,7 @@ export function registerContextCommand(program: Command): void {
 
   context
     .command('all')
-    .description('Full dump: all areas with nested children')
+    .description('Full dump: all areas → goals → milestones/tasks/habits (JSON)')
     .action(() => {
       ensureInitialized();
       const { contextService } = getContainer();

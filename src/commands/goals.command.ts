@@ -8,10 +8,17 @@ export function registerGoalsCommand(program: Command): void {
   const goals = program
     .command('goals')
     .passThroughOptions()
-    .description('List goals')
-    .option('--area <areaId>', 'Filter by area')
+    .description('List goals with progress, priority, and linked area')
+    .option('--area <areaId>', 'Filter by area ID')
     .option('--status <status>', 'Filter by status (active/done/archived)')
     .option('--json', 'Output as JSON')
+    .addHelpText('after', `
+Examples:
+  $ plan goals                                  List all active goals
+  $ plan goals --status done                    List completed goals
+  $ plan goals add "Run a marathon" --area <id> Create a goal linked to an area
+  $ plan goals progress <id> 75                 Set goal progress to 75%
+  $ plan goals ms add <goalId> "Milestone 1"    Add a milestone to a goal`)
     .action((opts) => {
       ensureInitialized();
       const { goalService } = getContainer();
@@ -25,10 +32,13 @@ export function registerGoalsCommand(program: Command): void {
   goals
     .command('add <title>')
     .description('Create a new goal')
-    .option('--area <areaId>', 'Link to area')
-    .option('--target-date <date>', 'Target date (YYYY-MM-DD)')
+    .option('--area <areaId>', 'Link to an area by ID')
+    .option('--target-date <date>', 'Target completion date (YYYY-MM-DD)')
     .option('--priority <priority>', 'Priority (low/medium/high/urgent)')
-    .option('--desc <description>', 'Description')
+    .option('--desc <description>', 'Longer description')
+    .addHelpText('after', `
+Example:
+  $ plan goals add "Learn Spanish" --area abc123 --priority high --target-date 2025-12-31`)
     .option('--json', 'Output as JSON')
     .action((title, opts) => {
       ensureInitialized();
@@ -112,7 +122,7 @@ export function registerGoalsCommand(program: Command): void {
 
   goals
     .command('rm <id>')
-    .description('Delete a goal')
+    .description('Delete a goal (cascades milestones, unlinks tasks/habits)')
     .action((id) => {
       ensureInitialized();
       const { goalService } = getContainer();
@@ -123,7 +133,12 @@ export function registerGoalsCommand(program: Command): void {
   // Milestone sub-commands
   const ms = goals
     .command('ms')
-    .description('Milestone operations');
+    .description('Manage milestones within a goal')
+    .addHelpText('after', `
+Examples:
+  $ plan goals ms add <goalId> "Complete chapter 1"   Add a milestone
+  $ plan goals ms toggle <msId>                       Toggle done/undone
+  $ plan goals ms rm <msId>                            Delete a milestone`);
 
   ms
     .command('add <goalId> <title>')

@@ -8,8 +8,14 @@ export function registerAreasCommand(program: Command): void {
   const areas = program
     .command('areas')
     .passThroughOptions()
-    .description('List all areas with stats')
+    .description('List all life areas (e.g. Health, Career) with goal/task counts')
     .option('--json', 'Output as JSON')
+    .addHelpText('after', `
+Examples:
+  $ plan areas                         List all areas with stats
+  $ plan areas add "Side Projects"     Create a new area
+  $ plan areas show <id>               Show area with its goals, tasks, habits
+  $ plan areas edit <id> --name "Fun"  Rename an area`)
     .action((opts) => {
       ensureInitialized();
       const { areaService } = getContainer();
@@ -19,8 +25,11 @@ export function registerAreasCommand(program: Command): void {
 
   areas
     .command('add <name>')
-    .description('Create a new area')
+    .description('Create a new life area')
     .option('--desc <description>', 'Area description')
+    .addHelpText('after', `
+Example:
+  $ plan areas add "Side Projects" --desc "Weekend coding & hobby apps"`)
     .option('--json', 'Output as JSON')
     .action((name, opts) => {
       ensureInitialized();
@@ -47,7 +56,7 @@ export function registerAreasCommand(program: Command): void {
 
   areas
     .command('rm <id>')
-    .description('Delete an area')
+    .description('Delete an area (goals/tasks/habits are kept but unlinked)')
     .action((id) => {
       ensureInitialized();
       const { areaService } = getContainer();

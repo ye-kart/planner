@@ -4,7 +4,11 @@ import { getContainer } from '../container.js';
 export function registerInitCommand(program: Command): void {
   program
     .command('init')
-    .description('Initialize the planner database and seed default areas')
+    .description('Initialize the planner database (~/.planner.db) and seed default areas')
+    .addHelpText('after', `
+Example:
+  $ plan init        Creates the database and seeds areas: Health, Career, Finance, etc.
+                     Safe to run again — existing data is preserved.`)
     .action(() => {
       const { initService } = getContainer();
       const result = initService.initialize();

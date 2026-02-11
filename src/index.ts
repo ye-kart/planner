@@ -7,9 +7,22 @@ const program = new Command();
 
 program
   .name('plan')
-  .description('A headless CLI life planner')
+  .description('A CLI life planner — organize areas, goals, tasks, and habits')
   .version('1.0.0')
-  .enablePositionalOptions();
+  .enablePositionalOptions()
+  .addHelpText('after', `
+Getting started:
+  $ plan init                          Set up the database (~/.planner.db)
+  $ plan areas                         See your life areas
+  $ plan goals add "Learn Spanish"     Create a goal
+  $ plan tasks add "Buy textbook"      Create a task
+  $ plan habits add "Study 30 min"     Create a daily habit
+  $ plan status                        See today's dashboard
+  $ plan tui                           Launch interactive terminal UI
+
+Hierarchy:  Areas → Goals → Tasks / Habits
+All commands support --json for machine-readable output.
+Use "plan <command> --help" for details on any command.`);
 
 registerCommands(program);
 

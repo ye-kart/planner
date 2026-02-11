@@ -8,10 +8,18 @@ export function registerHabitsCommand(program: Command): void {
   const habits = program
     .command('habits')
     .passThroughOptions()
-    .description('List active habits with streaks')
-    .option('--area <areaId>', 'Filter by area')
-    .option('--goal <goalId>', 'Filter by goal')
+    .description('List active habits with current and best streaks')
+    .option('--area <areaId>', 'Filter by area ID')
+    .option('--goal <goalId>', 'Filter by goal ID')
     .option('--json', 'Output as JSON')
+    .addHelpText('after', `
+Examples:
+  $ plan habits                                  List all active habits
+  $ plan habits add "Meditate" --frequency daily Create a daily habit
+  $ plan habits check <id>                       Mark today as done
+  $ plan habits check <id> 2025-03-10            Mark a specific date
+  $ plan habits streaks                          See streak overview
+  $ plan habits archive <id>                     Deactivate (keep history)`)
     .action((opts) => {
       ensureInitialized();
       const { habitService } = getContainer();
@@ -25,10 +33,15 @@ export function registerHabitsCommand(program: Command): void {
   habits
     .command('add <title>')
     .description('Create a new habit')
-    .option('--frequency <freq>', 'Frequency (daily/weekly/specific_days)')
+    .option('--frequency <freq>', 'Frequency: daily (default), weekly, or specific_days')
     .option('--days <days>', 'Days for specific_days (comma-separated, 0=Sun..6=Sat)')
-    .option('--area <areaId>', 'Link to area')
-    .option('--goal <goalId>', 'Link to goal')
+    .option('--area <areaId>', 'Link to an area by ID')
+    .option('--goal <goalId>', 'Link to a goal by ID')
+    .addHelpText('after', `
+Examples:
+  $ plan habits add "Read 20 pages"                              Daily (default)
+  $ plan habits add "Weekly review" --frequency weekly            Every week
+  $ plan habits add "Gym" --frequency specific_days --days 1,3,5  Mon/Wed/Fri`)
     .option('--json', 'Output as JSON')
     .action((title, opts) => {
       ensureInitialized();
@@ -58,8 +71,8 @@ export function registerHabitsCommand(program: Command): void {
     .command('edit <id>')
     .description('Update a habit')
     .option('--title <title>', 'New title')
-    .option('--frequency <freq>', 'Frequency')
-    .option('--days <days>', 'Days (comma-separated)')
+    .option('--frequency <freq>', 'Frequency (daily/weekly/specific_days)')
+    .option('--days <days>', 'Days for specific_days (comma-separated, 0=Sun..6=Sat)')
     .option('--area <areaId>', 'Link to area')
     .option('--goal <goalId>', 'Link to goal')
     .option('--json', 'Output as JSON')
@@ -99,7 +112,7 @@ export function registerHabitsCommand(program: Command): void {
 
   habits
     .command('archive <id>')
-    .description('Deactivate a habit')
+    .description('Deactivate a habit (completion history is preserved)')
     .option('--json', 'Output as JSON')
     .action((id, opts) => {
       ensureInitialized();
@@ -110,7 +123,7 @@ export function registerHabitsCommand(program: Command): void {
 
   habits
     .command('restore <id>')
-    .description('Reactivate a habit')
+    .description('Reactivate an archived habit')
     .option('--json', 'Output as JSON')
     .action((id, opts) => {
       ensureInitialized();

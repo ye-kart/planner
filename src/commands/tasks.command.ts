@@ -8,12 +8,21 @@ export function registerTasksCommand(program: Command): void {
   const tasks = program
     .command('tasks')
     .passThroughOptions()
-    .description('List tasks')
+    .description('List tasks with status, priority, and due dates')
     .option('--status <status>', 'Filter by status (todo/in_progress/done)')
-    .option('--priority <priority>', 'Filter by priority')
-    .option('--area <areaId>', 'Filter by area')
-    .option('--goal <goalId>', 'Filter by goal')
+    .option('--priority <priority>', 'Filter by priority (low/medium/high/urgent)')
+    .option('--area <areaId>', 'Filter by area ID')
+    .option('--goal <goalId>', 'Filter by goal ID')
     .option('--json', 'Output as JSON')
+    .addHelpText('after', `
+Examples:
+  $ plan tasks                                     List all tasks
+  $ plan tasks --status todo --priority high        Filter by status and priority
+  $ plan tasks add "Write report" --due 2025-03-20  Create a task with a due date
+  $ plan tasks start <id>                           Mark as in-progress
+  $ plan tasks done <id>                            Mark as complete
+  $ plan tasks today                                Tasks due today
+  $ plan tasks upcoming 14                          Tasks due in the next 14 days`)
     .action((opts) => {
       ensureInitialized();
       const { taskService } = getContainer();
@@ -29,11 +38,14 @@ export function registerTasksCommand(program: Command): void {
   tasks
     .command('add <title>')
     .description('Create a new task')
-    .option('--area <areaId>', 'Link to area')
-    .option('--goal <goalId>', 'Link to goal')
+    .option('--area <areaId>', 'Link to an area by ID')
+    .option('--goal <goalId>', 'Link to a goal by ID')
     .option('--priority <priority>', 'Priority (low/medium/high/urgent)')
     .option('--due <date>', 'Due date (YYYY-MM-DD)')
-    .option('--desc <description>', 'Description')
+    .option('--desc <description>', 'Longer description')
+    .addHelpText('after', `
+Example:
+  $ plan tasks add "Buy groceries" --due 2025-03-15 --priority medium --area abc123`)
     .option('--json', 'Output as JSON')
     .action((title, opts) => {
       ensureInitialized();
@@ -64,11 +76,11 @@ export function registerTasksCommand(program: Command): void {
     .description('Update a task')
     .option('--title <title>', 'New title')
     .option('--status <status>', 'Status (todo/in_progress/done)')
-    .option('--priority <priority>', 'Priority')
-    .option('--due <date>', 'Due date')
-    .option('--area <areaId>', 'Link to area')
-    .option('--goal <goalId>', 'Link to goal')
-    .option('--desc <description>', 'Description')
+    .option('--priority <priority>', 'Priority (low/medium/high/urgent)')
+    .option('--due <date>', 'Due date (YYYY-MM-DD)')
+    .option('--area <areaId>', 'Link to area by ID')
+    .option('--goal <goalId>', 'Link to goal by ID')
+    .option('--desc <description>', 'Longer description')
     .option('--json', 'Output as JSON')
     .action((id, opts) => {
       ensureInitialized();
@@ -98,7 +110,7 @@ export function registerTasksCommand(program: Command): void {
 
   tasks
     .command('start <id>')
-    .description('Mark task as in_progress')
+    .description('Mark task as in-progress')
     .option('--json', 'Output as JSON')
     .action((id, opts) => {
       ensureInitialized();
