@@ -117,7 +117,7 @@ export function InlineForm({
   });
 
   const hints = currentField.type === 'select'
-    ? ['<< >>:cycle', 'Tab:next', 'Enter:save', 'Esc:cancel']
+    ? ['◀▶:cycle', 'Tab:next', 'Enter:save', 'Esc:cancel']
     : ['Enter:save', 'Tab:next', 'Esc:cancel'];
 
   return (
@@ -137,24 +137,27 @@ export function InlineForm({
                   {field.label}:{field.required ? '*' : ' '}
                 </Text>
 
-                {field.type === 'select' && field.options ? (
-                  <Box gap={1}>
-                    {focused && <Text color={colors.accent2}>{'<'}</Text>}
-                    {field.options.map(opt => (
-                      <Text
-                        key={opt}
-                        color={(val || field.options![0]) === opt
-                          ? (focused ? colors.textAccent : colors.textPrimary)
-                          : colors.textSecondary}
-                        bold={(val || field.options![0]) === opt}
-                        underline={(val || field.options![0]) === opt && focused}
-                      >
-                        {opt}
-                      </Text>
-                    ))}
-                    {focused && <Text color={colors.accent2}>{'>'}</Text>}
-                  </Box>
-                ) : focused ? (
+                {field.type === 'select' && field.options ? (() => {
+                  const opts = field.options!;
+                  const selected = val || opts[0]!;
+                  const idx = opts.indexOf(selected);
+                  const pos = idx >= 0 ? idx + 1 : 1;
+                  const showCounter = opts.length > 4;
+
+                  return focused ? (
+                    <Box gap={1}>
+                      <Text color={colors.accent2}>{'◀'}</Text>
+                      <Text color={colors.textAccent} bold underline>{selected}</Text>
+                      <Text color={colors.accent2}>{'▶'}</Text>
+                      {showCounter && (
+                        <Text color={colors.textSecondary} dimColor>({pos}/{opts.length})</Text>
+                      )}
+                    </Box>
+                  ) : (
+                    <Text color={colors.textPrimary}>{selected}</Text>
+                  );
+                })()
+                : focused ? (
                   <Box borderStyle="round" borderColor={colors.borderActive} paddingX={1}>
                     <TextInput
                       value={val}
