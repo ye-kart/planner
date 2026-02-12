@@ -8,13 +8,15 @@ interface UseGlobalKeysOptions {
   nextScreen: () => void;
   prevScreen: () => void;
   openSearch: () => void;
+  openChat: () => void;
   searchActive: boolean;
   inputActive: boolean;
+  chatOpen: boolean;
 }
 
 export function useGlobalKeys(opts: UseGlobalKeysOptions): void {
   useInput((input, key) => {
-    if (opts.searchActive || opts.inputActive) return;
+    if (opts.searchActive || opts.inputActive || opts.chatOpen) return;
 
     if (input === 'q') {
       opts.onQuit();
@@ -26,6 +28,10 @@ export function useGlobalKeys(opts: UseGlobalKeysOptions): void {
     }
     if (input === '/') {
       opts.openSearch();
+      return;
+    }
+    if (input === 'c') {
+      opts.openChat();
       return;
     }
     if (key.tab && key.shift) {

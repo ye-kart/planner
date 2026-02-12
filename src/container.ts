@@ -5,6 +5,8 @@ import { MilestoneRepository } from './repositories/milestone.repository.js';
 import { TaskRepository } from './repositories/task.repository.js';
 import { HabitRepository } from './repositories/habit.repository.js';
 import { CompletionRepository } from './repositories/completion.repository.js';
+import { ConversationRepository } from './repositories/conversation.repository.js';
+import { MessageRepository } from './repositories/message.repository.js';
 import { InitService } from './services/init.service.js';
 import { AreaService } from './services/area.service.js';
 import { GoalService } from './services/goal.service.js';
@@ -12,6 +14,8 @@ import { TaskService } from './services/task.service.js';
 import { HabitService } from './services/habit.service.js';
 import { ContextService } from './services/context.service.js';
 import { StatusService } from './services/status.service.js';
+import { ConfigService } from './services/config.service.js';
+import { ChatService } from './services/chat.service.js';
 
 let _container: ReturnType<typeof createContainer> | null = null;
 
@@ -23,6 +27,8 @@ function createContainer(db: DB) {
   const taskRepo = new TaskRepository(db);
   const habitRepo = new HabitRepository(db);
   const completionRepo = new CompletionRepository(db);
+  const conversationRepo = new ConversationRepository(db);
+  const messageRepo = new MessageRepository(db);
 
   // Services
   const initService = new InitService(db);
@@ -32,6 +38,11 @@ function createContainer(db: DB) {
   const habitService = new HabitService(habitRepo, completionRepo, areaRepo, goalRepo);
   const contextService = new ContextService(areaRepo, goalRepo, milestoneRepo, taskRepo, habitRepo, completionRepo);
   const statusService = new StatusService(taskService, habitService);
+  const configService = new ConfigService();
+  const chatService = new ChatService(
+    conversationRepo, messageRepo, configService,
+    areaService, goalService, taskService, habitService, contextService,
+  );
 
   return {
     initService,
@@ -41,6 +52,8 @@ function createContainer(db: DB) {
     habitService,
     contextService,
     statusService,
+    configService,
+    chatService,
   };
 }
 

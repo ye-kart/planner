@@ -25,3 +25,17 @@ export class NotInitializedError extends PlannerError {
     this.name = 'NotInitializedError';
   }
 }
+
+export class ChatError extends PlannerError {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ChatError';
+  }
+}
+
+export class ConfigError extends PlannerError {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ConfigError';
+  }
+}

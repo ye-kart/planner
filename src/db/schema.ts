@@ -60,6 +60,24 @@ export const completions = sqliteTable('completions', {
   uniqueIndex('completions_habit_date_idx').on(table.habitId, table.date),
 ]);
 
+export const conversations = sqliteTable('conversations', {
+  id: text('id').primaryKey(),
+  title: text('title').notNull(),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+});
+
+export const messages = sqliteTable('messages', {
+  id: text('id').primaryKey(),
+  conversationId: text('conversation_id').notNull().references(() => conversations.id, { onDelete: 'cascade' }),
+  role: text('role', { enum: ['system', 'user', 'assistant', 'tool'] }).notNull(),
+  content: text('content'),
+  toolCallId: text('tool_call_id'),
+  toolCalls: text('tool_calls'), // JSON string of tool calls array
+  createdAt: text('created_at').notNull(),
+  position: integer('position').notNull(),
+});
+
 // Type exports
 export type Area = typeof areas.$inferSelect;
 export type NewArea = typeof areas.$inferInsert;
@@ -73,3 +91,7 @@ export type Habit = typeof habits.$inferSelect;
 export type NewHabit = typeof habits.$inferInsert;
 export type Completion = typeof completions.$inferSelect;
 export type NewCompletion = typeof completions.$inferInsert;
+export type Conversation = typeof conversations.$inferSelect;
+export type NewConversation = typeof conversations.$inferInsert;
+export type Message = typeof messages.$inferSelect;
+export type NewMessage = typeof messages.$inferInsert;

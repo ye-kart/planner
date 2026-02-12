@@ -55,6 +55,23 @@ const STATEMENTS = [
     note TEXT
   )`,
   `CREATE UNIQUE INDEX IF NOT EXISTS completions_habit_date_idx ON completions(habit_id, date)`,
+  `CREATE TABLE IF NOT EXISTS conversations (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  )`,
+  `CREATE TABLE IF NOT EXISTS messages (
+    id TEXT PRIMARY KEY,
+    conversation_id TEXT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+    role TEXT NOT NULL CHECK(role IN ('system', 'user', 'assistant', 'tool')),
+    content TEXT,
+    tool_call_id TEXT,
+    tool_calls TEXT,
+    created_at TEXT NOT NULL,
+    position INTEGER NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS messages_conversation_idx ON messages(conversation_id, position)`,
 ];
 
 export function runMigrations(db: DB): void {

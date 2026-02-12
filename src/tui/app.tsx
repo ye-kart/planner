@@ -19,6 +19,7 @@ function App({ container, initialTheme }: AppProps) {
   );
   const [searchActive, setSearchActive] = useState(false);
   const [inputActive, setInputActive] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const theme: Theme = themes[themeName]!;
 
   const cycleTheme = useCallback(() => {
@@ -33,6 +34,10 @@ function App({ container, initialTheme }: AppProps) {
   const { exit } = useApp();
   const onQuit = useCallback(() => exit(), [exit]);
 
+  const openChat = useCallback(() => {
+    setChatOpen(true);
+  }, []);
+
   useGlobalKeys({
     onQuit,
     cycleTheme,
@@ -40,8 +45,10 @@ function App({ container, initialTheme }: AppProps) {
     nextScreen: next,
     prevScreen: prev,
     openSearch: () => setSearchActive(true),
+    openChat,
     searchActive,
     inputActive,
+    chatOpen,
   });
 
   return (
@@ -53,6 +60,10 @@ function App({ container, initialTheme }: AppProps) {
             searchActive={searchActive}
             onSearchClose={() => setSearchActive(false)}
             setInputActive={setInputActive}
+            chatOpen={chatOpen}
+            onChatClose={() => setChatOpen(false)}
+            chatService={container.chatService}
+            chatConfigured={container.configService.isChatConfigured()}
           />
         </Box>
       </ServicesContext.Provider>

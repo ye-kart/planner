@@ -6,9 +6,10 @@ import { useAnimation } from '../hooks/use-animation.js';
 
 interface TopBarProps {
   screen: Screen;
+  chatConfigured?: boolean;
 }
 
-export function TopBar({ screen }: TopBarProps) {
+export function TopBar({ screen, chatConfigured }: TopBarProps) {
   const { colors, themeName } = useTheme();
   const frame = useAnimation(500);
   const flash = frame % 2 === 0;
@@ -19,6 +20,8 @@ export function TopBar({ screen }: TopBarProps) {
     day: 'numeric',
     year: 'numeric',
   });
+
+  const hints = 't:theme /:search' + (chatConfigured ? ' c:chat' : '') + ' q:quit';
 
   return (
     <Box flexDirection="column">
@@ -42,7 +45,7 @@ export function TopBar({ screen }: TopBarProps) {
           </Box>
         ))}
         <Box flexGrow={1} />
-        <Text color={colors.textSecondary}>t:theme /:search q:quit</Text>
+        <Text color={colors.textSecondary}>{hints}</Text>
       </Box>
     </Box>
   );
