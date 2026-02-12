@@ -24,6 +24,6 @@ export const matrixTheme: Theme = {
     border: '#004400',
     borderActive: '#00ff66',
     tabActive: '#00ff66',
-    tabInactive: '#003300',
+    tabInactive: '#228844',
   },
 };

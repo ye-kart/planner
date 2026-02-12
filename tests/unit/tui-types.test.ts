@@ -44,14 +44,18 @@ describe('TUI themes', () => {
     'tabActive', 'tabInactive',
   ];
 
-  it('has 3 themes registered', () => {
-    expect(themeNames).toHaveLength(3);
+  it('has 7 themes registered', () => {
+    expect(themeNames).toHaveLength(7);
     expect(themeNames).toContain('neon');
     expect(themeNames).toContain('matrix');
     expect(themeNames).toContain('purple');
+    expect(themeNames).toContain('ember');
+    expect(themeNames).toContain('frost');
+    expect(themeNames).toContain('sakura');
+    expect(themeNames).toContain('aurora');
   });
 
-  for (const name of ['neon', 'matrix', 'purple']) {
+  for (const name of ['neon', 'matrix', 'purple', 'ember', 'frost', 'sakura', 'aurora']) {
     describe(`${name} theme`, () => {
       it('has a name property', () => {
         expect(themes[name]!.name).toBe(name);

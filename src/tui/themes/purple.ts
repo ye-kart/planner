@@ -24,6 +24,6 @@ export const purpleTheme: Theme = {
     border: '#442266',
     borderActive: '#cc88ff',
     tabActive: '#cc88ff',
-    tabInactive: '#442266',
+    tabInactive: '#7755aa',
   },
 };
