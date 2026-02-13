@@ -28,6 +28,8 @@ export function ChatPanel({ screen, chatService, onClose, setInputActive, panelH
   const [error, setError] = useState<string | null>(null);
   const streamingRef = useRef(false);
   const [scrollOffset, setScrollOffset] = useState(0);
+  // Track whether user is pinned to bottom (auto-follow new content)
+  const [autoscroll, setAutoscroll] = useState(true);
 
   // Track streaming state in ref for escape key handler
   useEffect(() => {
@@ -62,15 +64,21 @@ export function ChatPanel({ screen, chatService, onClose, setInputActive, panelH
       onClose();
       return;
     }
-    // Scroll up/down with arrow keys
+    // Scroll up: move viewport towards older messages
     if (key.upArrow) {
       const jump = key.shift ? Math.max(Math.floor(messageAreaHeight / 2), 1) : 1;
       setScrollOffset(prev => prev + jump);
+      setAutoscroll(false);
       return;
     }
+    // Scroll down: move viewport towards newer messages
     if (key.downArrow) {
       const jump = key.shift ? Math.max(Math.floor(messageAreaHeight / 2), 1) : 1;
-      setScrollOffset(prev => Math.max(prev - jump, 0));
+      setScrollOffset(prev => {
+        const next = Math.max(prev - jump, 0);
+        if (next === 0) setAutoscroll(true); // Re-enable autoscroll at bottom
+        return next;
+      });
       return;
     }
   });
@@ -84,12 +92,12 @@ export function ChatPanel({ screen, chatService, onClose, setInputActive, panelH
     setStreaming(true);
     setStreamBuffer('');
     setError(null);
-    setScrollOffset(0); // Auto-scroll to bottom on send
+    setScrollOffset(0); // Snap to bottom on send
+    setAutoscroll(true);
 
     chatService.sendMessage(conversationId, userMsg, screen, {
       onToken: (token: string) => {
         setStreamBuffer(prev => prev + token);
-        setScrollOffset(0); // Stay pinned to bottom during streaming
       },
       onToolCall: (name: string) => {
         setDisplayMessages(prev => [...prev, { role: 'tool', content: `Calling ${name}...` }]);
@@ -138,15 +146,15 @@ export function ChatPanel({ screen, chatService, onClose, setInputActive, panelH
     }
   }
 
-  // Clamp scroll offset to valid range
+  // Compute effective scroll position
   const maxScroll = Math.max(allLines.length - messageAreaHeight, 0);
-  const clampedOffset = Math.min(scrollOffset, maxScroll);
+  const effectiveOffset = autoscroll ? 0 : Math.min(scrollOffset, maxScroll);
 
   // Slice visible window: offset 0 = bottom (latest), >0 = scrolled up
-  const endIdx = allLines.length - clampedOffset;
+  const endIdx = allLines.length - effectiveOffset;
   const startIdx = Math.max(endIdx - messageAreaHeight, 0);
   const visibleLines = allLines.slice(startIdx, endIdx);
-  const isScrolledUp = clampedOffset > 0;
+  const isScrolledUp = effectiveOffset > 0;
 
   return (
     <Box
@@ -161,7 +169,7 @@ export function ChatPanel({ screen, chatService, onClose, setInputActive, panelH
         <Text color={colors.accent1} bold>AI Chat</Text>
         <Box gap={1}>
           {streaming && <Text color={colors.warning}>thinking...</Text>}
-          {isScrolledUp && <Text color={colors.warning}>↑scrolled</Text>}
+          {isScrolledUp && <Text color={colors.warning}>↑{effectiveOffset}lines</Text>}
           <Text color={colors.textSecondary}>↑↓:scroll Esc:close</Text>
         </Box>
       </Box>
@@ -187,7 +195,7 @@ export function ChatPanel({ screen, chatService, onClose, setInputActive, panelH
                     ? colors.accent2
                     : colors.textPrimary
             }
-            wrap="truncate"
+            wrap="wrap"
           >
             {line.text}
           </Text>
