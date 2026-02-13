@@ -20,9 +20,10 @@ interface HabitsScreenProps {
   refresh: () => void;
   searchQuery: string;
   setInputActive: (active: boolean) => void;
+  chatOpen: boolean;
 }
 
-export function HabitsScreen({ refreshKey, refresh, searchQuery, setInputActive }: HabitsScreenProps) {
+export function HabitsScreen({ refreshKey, refresh, searchQuery, setInputActive, chatOpen }: HabitsScreenProps) {
   const { colors } = useTheme();
   const { habitService, areaService, goalService } = useServices();
 
@@ -230,7 +231,7 @@ export function HabitsScreen({ refreshKey, refresh, searchQuery, setInputActive 
 
   // Global keys for detail mode and list shortcuts
   useInput((input, key) => {
-    if (mode === 'add' || mode === 'edit') return;
+    if (chatOpen || mode === 'add' || mode === 'edit') return;
 
     if (mode === 'detail') {
       if (key.backspace || key.delete || key.escape || input === 'h') {
@@ -396,6 +397,7 @@ export function HabitsScreen({ refreshKey, refresh, searchQuery, setInputActive 
         {showConfetti && <Confetti active={showConfetti} />}
         <ListNavigator
           items={filtered}
+          active={!chatOpen}
           emptyMessage={viewMode === 'today'
             ? 'No habits due today — press n to add one'
             : 'No habits found — press n to add one'}

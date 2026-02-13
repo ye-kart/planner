@@ -17,6 +17,7 @@ interface TasksScreenProps {
   refresh: () => void;
   searchQuery: string;
   setInputActive: (active: boolean) => void;
+  chatOpen: boolean;
 }
 
 type Filter = 'all' | 'todo' | 'in_progress' | 'done';
@@ -41,7 +42,7 @@ function OverdueIndicator({ dueDate }: { dueDate: string | null }) {
   );
 }
 
-export function TasksScreen({ refreshKey, refresh, searchQuery, setInputActive }: TasksScreenProps) {
+export function TasksScreen({ refreshKey, refresh, searchQuery, setInputActive, chatOpen }: TasksScreenProps) {
   const { colors } = useTheme();
   const { taskService, areaService, goalService } = useServices();
 
@@ -218,7 +219,7 @@ export function TasksScreen({ refreshKey, refresh, searchQuery, setInputActive }
 
   // Key handling for detail/list modes
   useInput((input, key) => {
-    if (mode === 'add' || mode === 'edit') return;
+    if (chatOpen || mode === 'add' || mode === 'edit') return;
 
     if (mode === 'detail' && selectedTask) {
       if (key.backspace || key.delete || key.escape || input === 'h') {
@@ -387,6 +388,7 @@ export function TasksScreen({ refreshKey, refresh, searchQuery, setInputActive }
       <Panel title={`Tasks [filter: ${filter}]`}>
         <ListNavigator
           items={filtered}
+          active={!chatOpen}
           emptyMessage="No tasks found — press n to add one"
           onSelect={handleSelect}
           onAction={handleAction}

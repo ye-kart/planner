@@ -33,7 +33,7 @@ export function ChatPanel({ screen, chatService, onClose, setInputActive, panelH
     streamingRef.current = streaming;
   }, [streaming]);
 
-  // On mount: resume latest conversation or create new one
+  // On mount: clear old conversations and start fresh
   useEffect(() => {
     setInputActive(true);
 
@@ -42,34 +42,9 @@ export function ChatPanel({ screen, chatService, onClose, setInputActive, panelH
       return;
     }
 
-    const conversations = chatService.listConversations();
-    let convId: string;
-    if (conversations.length > 0) {
-      convId = conversations[0]!.id;
-    } else {
-      const conv = chatService.createConversation();
-      convId = conv.id;
-    }
-    setConversationId(convId);
-
-    // Load existing messages
-    const msgs = chatService.getMessages(convId);
-    const display: DisplayMessage[] = [];
-    for (const msg of msgs) {
-      if (msg.role === 'user') {
-        display.push({ role: 'user', content: msg.content || '' });
-      } else if (msg.role === 'assistant' && msg.content && !msg.toolCalls) {
-        display.push({ role: 'assistant', content: msg.content });
-      } else if (msg.role === 'tool') {
-        try {
-          const result = JSON.parse(msg.content || '{}');
-          display.push({ role: 'tool', content: result.message || msg.content || '' });
-        } catch {
-          display.push({ role: 'tool', content: msg.content || '' });
-        }
-      }
-    }
-    setDisplayMessages(display);
+    chatService.clearAllConversations();
+    const conv = chatService.createConversation();
+    setConversationId(conv.id);
 
     return () => {
       setInputActive(false);

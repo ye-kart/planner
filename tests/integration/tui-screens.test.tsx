@@ -111,7 +111,7 @@ describe('TUI Screens', () => {
       const { Wrapper } = createWrapper();
       const { lastFrame } = render(
         <Wrapper>
-          <AreasScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} />
+          <AreasScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} chatOpen={false} />
         </Wrapper>
       );
       const frame = lastFrame()!;
@@ -124,7 +124,7 @@ describe('TUI Screens', () => {
       const { Wrapper } = createWrapper();
       const { lastFrame } = render(
         <Wrapper>
-          <AreasScreen refreshKey={0} refresh={noop} searchQuery="work" setInputActive={noop} />
+          <AreasScreen refreshKey={0} refresh={noop} searchQuery="work" setInputActive={noop} chatOpen={false} />
         </Wrapper>
       );
       const frame = lastFrame()!;
@@ -136,7 +136,7 @@ describe('TUI Screens', () => {
       const { Wrapper } = createWrapper();
       const { lastFrame } = render(
         <Wrapper>
-          <AreasScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} />
+          <AreasScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} chatOpen={false} />
         </Wrapper>
       );
       const frame = lastFrame()!;
@@ -152,7 +152,7 @@ describe('TUI Screens', () => {
       const { Wrapper } = createWrapper();
       const { lastFrame } = render(
         <Wrapper>
-          <GoalsScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} />
+          <GoalsScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} chatOpen={false} />
         </Wrapper>
       );
       const frame = lastFrame()!;
@@ -164,7 +164,7 @@ describe('TUI Screens', () => {
       const { Wrapper } = createWrapper();
       const { lastFrame } = render(
         <Wrapper>
-          <GoalsScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} />
+          <GoalsScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} chatOpen={false} />
         </Wrapper>
       );
       const frame = lastFrame()!;
@@ -181,7 +181,7 @@ describe('TUI Screens', () => {
       const { Wrapper } = createWrapper();
       const { lastFrame } = render(
         <Wrapper>
-          <TasksScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} />
+          <TasksScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} chatOpen={false} />
         </Wrapper>
       );
       const frame = lastFrame()!;
@@ -193,7 +193,7 @@ describe('TUI Screens', () => {
       const { Wrapper } = createWrapper();
       const { lastFrame } = render(
         <Wrapper>
-          <TasksScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} />
+          <TasksScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} chatOpen={false} />
         </Wrapper>
       );
       const frame = lastFrame()!;
@@ -212,7 +212,7 @@ describe('TUI Screens', () => {
       const { Wrapper } = createWrapper();
       const { lastFrame } = render(
         <Wrapper>
-          <HabitsScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} />
+          <HabitsScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} chatOpen={false} />
         </Wrapper>
       );
       const frame = lastFrame()!;
@@ -224,7 +224,7 @@ describe('TUI Screens', () => {
       const { Wrapper } = createWrapper();
       const { lastFrame } = render(
         <Wrapper>
-          <HabitsScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} />
+          <HabitsScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} chatOpen={false} />
         </Wrapper>
       );
       const frame = lastFrame()!;
@@ -239,7 +239,7 @@ describe('TUI Screens', () => {
       const { Wrapper } = createWrapper();
       const { lastFrame } = render(
         <Wrapper>
-          <HabitsScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} />
+          <HabitsScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} chatOpen={false} />
         </Wrapper>
       );
       const frame = lastFrame()!;
@@ -255,7 +255,7 @@ describe('TUI Screens', () => {
       const { Wrapper } = createWrapper();
       const { lastFrame } = render(
         <Wrapper>
-          <HabitsScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} />
+          <HabitsScreen refreshKey={0} refresh={noop} searchQuery="" setInputActive={noop} chatOpen={false} />
         </Wrapper>
       );
       const frame = lastFrame()!;

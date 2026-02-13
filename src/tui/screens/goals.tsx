@@ -18,6 +18,7 @@ interface GoalsScreenProps {
   refresh: () => void;
   searchQuery: string;
   setInputActive: (active: boolean) => void;
+  chatOpen: boolean;
 }
 
 type Filter = 'active' | 'done' | 'archived' | 'all';
@@ -26,7 +27,7 @@ type DetailAction = null | 'progress' | 'add-milestone';
 
 const FILTERS: Filter[] = ['active', 'done', 'archived', 'all'];
 
-export function GoalsScreen({ refreshKey, refresh, searchQuery, setInputActive }: GoalsScreenProps) {
+export function GoalsScreen({ refreshKey, refresh, searchQuery, setInputActive, chatOpen }: GoalsScreenProps) {
   const { colors } = useTheme();
   const { goalService, areaService } = useServices();
 
@@ -191,7 +192,7 @@ export function GoalsScreen({ refreshKey, refresh, searchQuery, setInputActive }
 
   // Key handling for detail and list modes
   useInput((input, key) => {
-    if (mode === 'add' || mode === 'edit') return;
+    if (chatOpen || mode === 'add' || mode === 'edit') return;
 
     // Progress input mode
     if (detailAction === 'progress') {
@@ -486,6 +487,7 @@ export function GoalsScreen({ refreshKey, refresh, searchQuery, setInputActive }
       <Panel title={`Goals [filter: ${filter}]`}>
         <ListNavigator
           items={filtered}
+          active={!chatOpen}
           emptyMessage={`No ${filter === 'all' ? '' : filter + ' '}goals — press n to add one`}
           onSelect={handleSelect}
           onAction={handleAction}

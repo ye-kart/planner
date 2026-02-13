@@ -14,6 +14,7 @@ interface AreasScreenProps {
   refresh: () => void;
   searchQuery: string;
   setInputActive: (active: boolean) => void;
+  chatOpen: boolean;
 }
 
 type Mode = 'list' | 'detail' | 'add' | 'edit';
@@ -23,7 +24,7 @@ const areaFields: FormFieldDef[] = [
   { key: 'description', label: 'Description', type: 'text', placeholder: 'optional' },
 ];
 
-export function AreasScreen({ refreshKey, refresh, searchQuery, setInputActive }: AreasScreenProps) {
+export function AreasScreen({ refreshKey, refresh, searchQuery, setInputActive, chatOpen }: AreasScreenProps) {
   const { colors } = useTheme();
   const { areaService } = useServices();
 
@@ -129,7 +130,7 @@ export function AreasScreen({ refreshKey, refresh, searchQuery, setInputActive }
 
   // Global keys for this screen
   useInput((input, key) => {
-    if (mode === 'add' || mode === 'edit') return;
+    if (chatOpen || mode === 'add' || mode === 'edit') return;
 
     if (mode === 'detail') {
       if (key.backspace || key.delete || key.escape || input === 'h') {
@@ -273,6 +274,7 @@ export function AreasScreen({ refreshKey, refresh, searchQuery, setInputActive }
       <Panel title="Areas">
         <ListNavigator
           items={filtered}
+          active={!chatOpen}
           emptyMessage="No areas found — press n to add one"
           onSelect={handleSelect}
           onAction={handleAction}

@@ -52,15 +52,17 @@ export function Layout({ screen, searchActive, onSearchClose, setInputActive, ch
     }
   });
 
-  const screenProps = { refreshKey, refresh, searchQuery, setInputActive };
+  const screenProps = { refreshKey, refresh, searchQuery, setInputActive, chatOpen };
 
   // Calculate chat panel height (~40% of terminal, min 8, max 20)
   const termHeight = stdout?.rows || 24;
   const chatHeight = chatOpen ? Math.min(Math.max(Math.round(termHeight * 0.4), 8), 20) : 0;
-  const mainHeight = chatOpen ? termHeight - chatHeight - 3 : undefined;
+  // TopBar = 1 row, search bar = ~1 row when shown, bottom padding varies
+  // Reserve 2 rows for TopBar + bottom chrome; rest goes to main content
+  const mainHeight = chatOpen ? termHeight - chatHeight - 3 : termHeight - 2;
 
   return (
-    <Box flexDirection="column">
+    <Box flexDirection="column" height={termHeight}>
       <TopBar screen={screen} chatConfigured={chatConfigured} />
 
       {searchActive && (
@@ -78,7 +80,7 @@ export function Layout({ screen, searchActive, onSearchClose, setInputActive, ch
         </Box>
       )}
 
-      <Box flexDirection="column" paddingX={1} minHeight={chatOpen ? undefined : 10} height={mainHeight}>
+      <Box flexDirection="column" paddingX={1} height={mainHeight} overflow="hidden">
         {screen === Screen.Dashboard && <DashboardScreen refreshKey={refreshKey} searchQuery={searchQuery} />}
         {screen === Screen.Areas && <AreasScreen {...screenProps} />}
         {screen === Screen.Goals && <GoalsScreen {...screenProps} />}

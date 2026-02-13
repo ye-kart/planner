@@ -66,6 +66,12 @@ export class ChatService {
     this.conversationRepo.delete(id);
   }
 
+  clearAllConversations(): void {
+    for (const conv of this.conversationRepo.findAll()) {
+      this.conversationRepo.delete(conv.id);
+    }
+  }
+
   getMessages(conversationId: string): Message[] {
     return this.messageRepo.findByConversationId(conversationId);
   }
