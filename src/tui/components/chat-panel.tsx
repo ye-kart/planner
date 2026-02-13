@@ -27,6 +27,7 @@ export function ChatPanel({ screen, chatService, onClose, setInputActive, panelH
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const streamingRef = useRef(false);
+  const [scrollOffset, setScrollOffset] = useState(0);
 
   // Track streaming state in ref for escape key handler
   useEffect(() => {
@@ -51,11 +52,26 @@ export function ChatPanel({ screen, chatService, onClose, setInputActive, panelH
     };
   }, []);
 
-  // Handle Escape to close
+  // Calculate visible message area height (panel - border - input - header)
+  const messageAreaHeight = Math.max(panelHeight - 4, 2);
+
+  // Handle Escape to close + scroll keys
   useInput((_input, key) => {
     if (key.escape && !streamingRef.current) {
       setInputActive(false);
       onClose();
+      return;
+    }
+    // Scroll up/down with arrow keys
+    if (key.upArrow) {
+      const jump = key.shift ? Math.max(Math.floor(messageAreaHeight / 2), 1) : 1;
+      setScrollOffset(prev => prev + jump);
+      return;
+    }
+    if (key.downArrow) {
+      const jump = key.shift ? Math.max(Math.floor(messageAreaHeight / 2), 1) : 1;
+      setScrollOffset(prev => Math.max(prev - jump, 0));
+      return;
     }
   });
 
@@ -68,10 +84,12 @@ export function ChatPanel({ screen, chatService, onClose, setInputActive, panelH
     setStreaming(true);
     setStreamBuffer('');
     setError(null);
+    setScrollOffset(0); // Auto-scroll to bottom on send
 
     chatService.sendMessage(conversationId, userMsg, screen, {
       onToken: (token: string) => {
         setStreamBuffer(prev => prev + token);
+        setScrollOffset(0); // Stay pinned to bottom during streaming
       },
       onToolCall: (name: string) => {
         setDisplayMessages(prev => [...prev, { role: 'tool', content: `Calling ${name}...` }]);
@@ -104,10 +122,7 @@ export function ChatPanel({ screen, chatService, onClose, setInputActive, panelH
     });
   }, [streaming, conversationId, screen, chatService]);
 
-  // Calculate visible message area height (panel - border - input - header)
-  const messageAreaHeight = Math.max(panelHeight - 4, 2);
-
-  // Get visible messages (last N lines that fit)
+  // Build all display lines
   const allLines: { role: string; text: string }[] = [];
   for (const msg of displayMessages) {
     const prefix = msg.role === 'user' ? '> ' : msg.role === 'tool' ? '  ' : '< ';
@@ -122,7 +137,16 @@ export function ChatPanel({ screen, chatService, onClose, setInputActive, panelH
       allLines.push({ role: 'streaming', text: '< ' + line });
     }
   }
-  const visibleLines = allLines.slice(-messageAreaHeight);
+
+  // Clamp scroll offset to valid range
+  const maxScroll = Math.max(allLines.length - messageAreaHeight, 0);
+  const clampedOffset = Math.min(scrollOffset, maxScroll);
+
+  // Slice visible window: offset 0 = bottom (latest), >0 = scrolled up
+  const endIdx = allLines.length - clampedOffset;
+  const startIdx = Math.max(endIdx - messageAreaHeight, 0);
+  const visibleLines = allLines.slice(startIdx, endIdx);
+  const isScrolledUp = clampedOffset > 0;
 
   return (
     <Box
@@ -137,7 +161,8 @@ export function ChatPanel({ screen, chatService, onClose, setInputActive, panelH
         <Text color={colors.accent1} bold>AI Chat</Text>
         <Box gap={1}>
           {streaming && <Text color={colors.warning}>thinking...</Text>}
-          <Text color={colors.textSecondary}>Esc:close</Text>
+          {isScrolledUp && <Text color={colors.warning}>↑scrolled</Text>}
+          <Text color={colors.textSecondary}>↑↓:scroll Esc:close</Text>
         </Box>
       </Box>
 
