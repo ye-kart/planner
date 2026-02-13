@@ -21,6 +21,7 @@ interface TasksScreenProps {
 }
 
 type Filter = 'all' | 'todo' | 'in_progress' | 'done';
+const FILTERS: Filter[] = ['all', 'todo', 'in_progress', 'done'];
 type Mode = 'list' | 'detail' | 'add' | 'edit';
 
 function OverdueIndicator({ dueDate }: { dueDate: string | null }) {
@@ -129,12 +130,6 @@ export function TasksScreen({ refreshKey, refresh, searchQuery, setInputActive, 
       } catch (err) {
         setMessage(err instanceof Error ? err.message : 'Error');
       }
-    } else if (key === 'f') {
-      const filters: Filter[] = ['all', 'todo', 'in_progress', 'done'];
-      setFilter(prev => {
-        const idx = filters.indexOf(prev);
-        return filters[(idx + 1) % filters.length]!;
-      });
     } else if (key === 'e') {
       setSelectedTask(task);
       setMode('edit');
@@ -279,6 +274,16 @@ export function TasksScreen({ refreshKey, refresh, searchQuery, setInputActive, 
     // List mode shortcuts
     if (input === 'n') {
       setMode('add');
+    } else if (input === 'f') {
+      setFilter(prev => {
+        const idx = FILTERS.indexOf(prev);
+        return FILTERS[(idx + 1) % FILTERS.length]!;
+      });
+    } else if (input === 'F') {
+      setFilter(prev => {
+        const idx = FILTERS.indexOf(prev);
+        return FILTERS[(idx - 1 + FILTERS.length) % FILTERS.length]!;
+      });
     }
   });
 
@@ -385,7 +390,21 @@ export function TasksScreen({ refreshKey, refresh, searchQuery, setInputActive, 
   // ── List mode ──────────────────────────────────────
   return (
     <Box flexDirection="column" gap={1}>
-      <Panel title={`Tasks [filter: ${filter}]`}>
+      <Panel title="Tasks" extra={
+        <Box gap={1}>
+          <Text color={colors.textSecondary}>f:</Text>
+          {FILTERS.map(f => (
+            <Text
+              key={f}
+              color={f === filter ? colors.accent1 : colors.textSecondary}
+              bold={f === filter}
+              underline={f === filter}
+            >
+              {f}
+            </Text>
+          ))}
+        </Box>
+      }>
         <ListNavigator
           items={filtered}
           active={!chatOpen}
@@ -422,7 +441,7 @@ export function TasksScreen({ refreshKey, refresh, searchQuery, setInputActive, 
             </Text>
           </Box>
         )}
-        <HintBar hints={['Enter:detail', 'n:add', 'e:edit', 'x:delete', 'd:done', 's:start', 'f:filter']} />
+        <HintBar hints={['Enter:detail', 'n:add', 'e:edit', 'x:delete', 'd:done', 's:start', 'f/F:filter']} />
       </Panel>
     </Box>
   );

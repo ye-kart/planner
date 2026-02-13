@@ -4,12 +4,13 @@ import type { ReactNode } from 'react';
 
 interface PanelProps {
   title?: string;
+  extra?: ReactNode;
   children: ReactNode;
   width?: number | string;
   height?: number | string;
 }
 
-export function Panel({ title, children, width, height }: PanelProps) {
+export function Panel({ title, extra, children, width, height }: PanelProps) {
   const { colors } = useTheme();
 
   return (
@@ -21,9 +22,10 @@ export function Panel({ title, children, width, height }: PanelProps) {
       width={width as number | undefined}
       height={height as number | undefined}
     >
-      {title && (
-        <Box marginBottom={0}>
-          <Text color={colors.textAccent} bold>{title}</Text>
+      {(title || extra) && (
+        <Box marginBottom={0} justifyContent="space-between">
+          {title && <Text color={colors.textAccent} bold>{title}</Text>}
+          {extra}
         </Box>
       )}
       {children}

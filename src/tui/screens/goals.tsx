@@ -111,11 +111,6 @@ export function GoalsScreen({ refreshKey, refresh, searchQuery, setInputActive, 
       setMode('edit');
     } else if (key === 'n') {
       setMode('add');
-    } else if (key === 'f') {
-      setFilter(prev => {
-        const idx = FILTERS.indexOf(prev);
-        return FILTERS[(idx + 1) % FILTERS.length]!;
-      });
     } else if (key === 'x') {
       if (deleteConfirm === goal.id) {
         try {
@@ -328,6 +323,11 @@ export function GoalsScreen({ refreshKey, refresh, searchQuery, setInputActive, 
         const idx = FILTERS.indexOf(prev);
         return FILTERS[(idx + 1) % FILTERS.length]!;
       });
+    } else if (input === 'F') {
+      setFilter(prev => {
+        const idx = FILTERS.indexOf(prev);
+        return FILTERS[(idx - 1 + FILTERS.length) % FILTERS.length]!;
+      });
     }
   });
 
@@ -484,7 +484,21 @@ export function GoalsScreen({ refreshKey, refresh, searchQuery, setInputActive, 
   // ── List mode ──────────────────────────────────────
   return (
     <Box flexDirection="column" gap={1}>
-      <Panel title={`Goals [filter: ${filter}]`}>
+      <Panel title="Goals" extra={
+        <Box gap={1}>
+          <Text color={colors.textSecondary}>f:</Text>
+          {FILTERS.map(f => (
+            <Text
+              key={f}
+              color={f === filter ? colors.accent1 : colors.textSecondary}
+              bold={f === filter}
+              underline={f === filter}
+            >
+              {f}
+            </Text>
+          ))}
+        </Box>
+      }>
         <ListNavigator
           items={filtered}
           active={!chatOpen}
@@ -523,7 +537,7 @@ export function GoalsScreen({ refreshKey, refresh, searchQuery, setInputActive, 
             </Text>
           </Box>
         )}
-        <HintBar hints={['Enter:detail', 'n:add', 'e:edit', 'x:delete', 'f:filter']} />
+        <HintBar hints={['Enter:detail', 'n:add', 'e:edit', 'x:delete', 'f/F:filter']} />
       </Panel>
     </Box>
   );
