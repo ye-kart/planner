@@ -34,6 +34,7 @@ Habits:
 - **Habits** — Recurring activities with frequency scheduling and streak tracking
 - **Dashboard** — Daily overview of what's due and how you're doing
 - **AI-ready** — `plan context` commands return full JSON trees for agent integration
+- **Export** — Snapshot your entire planner to a well-formatted Markdown file
 - **Portable** — Single SQLite file, zero config, works offline
 
 ## Installation
@@ -91,6 +92,7 @@ Every command supports `--json` for machine-readable output.
 |---------|-------------|
 | `plan init` | Initialize database and seed default areas |
 | `plan status` | Today's dashboard: due tasks, habit check-ins, streaks |
+| `plan export --output <path>` | Export all data to Markdown (or `--json` for JSON) |
 
 ### Areas
 
@@ -261,6 +263,56 @@ plan context all          # Complete state tree
 ```
 
 The `unlinked` key holds items with no `areaId` — orphaned or quick-captured items.
+
+</details>
+
+### Export
+
+Snapshot your entire planner to a formatted Markdown or JSON file.
+
+```bash
+plan export --output ./planner.md         # Formatted Markdown
+plan export --output ./data.json --json   # JSON dump
+```
+
+The Markdown export organizes data hierarchically — areas, goals (with progress tables and milestone checklists), tasks, and habits with streak info. Useful for sharing, version control, or offline review.
+
+<details>
+<summary>Example Markdown output</summary>
+
+```markdown
+# Planner Export
+
+> Exported on Sat, Feb 14 2026
+
+---
+
+## Health
+
+> Physical wellness
+
+### Goals
+
+#### Run a marathon
+
+| Status | Progress | Priority | Target |
+|--------|----------|----------|--------|
+| active | ████░░░░░░ 40% | high | 2026-06-01 |
+
+**Milestones**
+
+- [x] Run 10K without stopping
+- [ ] Complete half-marathon
+
+**Tasks**
+
+- [x] **high** Buy running shoes — due 2026-03-01
+- [ ] **medium** Sign up for race
+
+**Habits**
+
+- Morning run (Mon, Wed, Fri) — streak: 12 / best: 30
+```
 
 </details>
 

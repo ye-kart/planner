@@ -16,6 +16,7 @@ import { ContextService } from './services/context.service.js';
 import { StatusService } from './services/status.service.js';
 import { ConfigService } from './services/config.service.js';
 import { ChatService } from './services/chat.service.js';
+import { ExportService } from './services/export.service.js';
 
 let _container: ReturnType<typeof createContainer> | null = null;
 
@@ -43,6 +44,7 @@ function createContainer(db: DB) {
     conversationRepo, messageRepo, configService,
     areaService, goalService, taskService, habitService, contextService,
   );
+  const exportService = new ExportService(contextService);
 
   return {
     initService,
@@ -54,6 +56,7 @@ function createContainer(db: DB) {
     statusService,
     configService,
     chatService,
+    exportService,
   };
 }
 
