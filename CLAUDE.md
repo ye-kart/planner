@@ -107,6 +107,8 @@ Example: `✨ Add habit archiving command` not `Added habit archiving command`
 
 **Schema change:** Update schema.ts + add ALTER TABLE in migrate.ts. New columns must have defaults or be nullable.
 
+**Before committing a new feature:** Always review `README.md` and update it to reflect the new functionality — add feature bullets, command examples, configuration, or sections as needed. The README is the primary user-facing documentation and must stay in sync with the codebase.
+
 ## TUI Screenshots (VHS)
 
 Use [VHS](https://github.com/charmbracelet/vhs) to capture TUI screenshots and GIFs. Requires `vhs`, `ttyd`, and `ffmpeg`.

@@ -1,7 +1,12 @@
+import { readFileSync, existsSync } from 'fs';
+import { resolve, extname } from 'path';
 import type { AreaService } from './area.service.js';
 import type { GoalService } from './goal.service.js';
 import type { TaskService } from './task.service.js';
 import type { HabitService } from './habit.service.js';
+
+const ALLOWED_EXTENSIONS = new Set(['.md', '.txt', '.json', '.csv', '.yaml', '.yml']);
+const MAX_CONTENT_LENGTH = 50_000;
 
 interface ToolParam {
   type: string;
@@ -355,6 +360,21 @@ export function getToolDefinitions(): ToolDefinition[] {
         },
       },
     },
+    // --- Document ---
+    {
+      type: 'function',
+      function: {
+        name: 'read_document',
+        description: 'Read a document file from disk. Use this when the user asks you to analyze, import, or review an external file. Supports .md, .txt, .json, .csv, .yaml, .yml files. Returns the file contents so you can compare against current planning data and suggest new goals, tasks, or habits.',
+        parameters: {
+          type: 'object',
+          properties: {
+            path: { type: 'string', description: 'File path to read (absolute or relative to working directory)' },
+          },
+          required: ['path'],
+        },
+      },
+    },
   ];
 }
 
@@ -374,6 +394,12 @@ export interface ToolServices {
 export function executeTool(name: string, argsJson: string, services: ToolServices): ToolResult {
   try {
     const args = JSON.parse(argsJson || '{}');
+
+    // Utility tools (no service dependencies)
+    if (name === 'read_document') {
+      return readDocument(args.path);
+    }
+
     const { areaService, goalService, taskService, habitService } = services;
 
     switch (name) {
@@ -517,4 +543,38 @@ export function executeTool(name: string, argsJson: string, services: ToolServic
     const message = error instanceof Error ? error.message : String(error);
     return { success: false, message };
   }
+}
+
+function readDocument(filePath: string): ToolResult {
+  if (!filePath) {
+    return { success: false, message: 'File path is required' };
+  }
+
+  const resolved = resolve(filePath);
+  const ext = extname(resolved).toLowerCase();
+
+  if (!ALLOWED_EXTENSIONS.has(ext)) {
+    return {
+      success: false,
+      message: `Unsupported file type "${ext}". Supported: ${[...ALLOWED_EXTENSIONS].join(', ')}`,
+    };
+  }
+
+  if (!existsSync(resolved)) {
+    return { success: false, message: `File not found: ${resolved}` };
+  }
+
+  let content = readFileSync(resolved, 'utf-8');
+  let truncated = false;
+
+  if (content.length > MAX_CONTENT_LENGTH) {
+    content = content.slice(0, MAX_CONTENT_LENGTH);
+    truncated = true;
+  }
+
+  const message = truncated
+    ? `Read ${MAX_CONTENT_LENGTH.toLocaleString()} characters from ${resolved} (truncated — file is larger)`
+    : `Read ${content.length.toLocaleString()} characters from ${resolved}`;
+
+  return { success: true, message, data: content };
 }

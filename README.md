@@ -33,6 +33,8 @@ Habits:
 - **Tasks** — One-off actionable items with due dates and priorities
 - **Habits** — Recurring activities with frequency scheduling and streak tracking
 - **Dashboard** — Daily overview of what's due and how you're doing
+- **AI Chat** — Embedded assistant that can read, create, and modify your plans via natural language
+- **Document Import** — Feed the AI a Markdown file and get smart suggestions (no duplicates)
 - **AI-ready** — `plan context` commands return full JSON trees for agent integration
 - **Export** — Snapshot your entire planner to a well-formatted Markdown file
 - **Portable** — Single SQLite file, zero config, works offline
@@ -316,6 +318,31 @@ The Markdown export organizes data hierarchically — areas, goals (with progres
 
 </details>
 
+### AI Chat (TUI)
+
+The TUI includes an embedded AI assistant that can read, create, and modify your planning data through natural conversation. Press `c` in the TUI to open the chat panel.
+
+```bash
+plan tui                              # Launch the terminal UI
+# Then press 'c' to open the AI chat
+```
+
+The assistant has access to 23 tools covering areas, goals, tasks, habits, milestones, and document reading. It sees your full planner state and today's summary in every message.
+
+#### Document analysis
+
+Ask the AI to analyze an external Markdown file — it will compare against your current data and suggest new items without duplicates:
+
+```
+> analyze the document at .local/planner.md and suggest what I should add
+```
+
+The AI reads the file, compares it with existing goals/tasks/habits, and presents suggestions organized as NEW, EXISTS, or UPDATE — then waits for your confirmation before creating anything.
+
+Supported file types: `.md`, `.txt`, `.json`, `.csv`, `.yaml`, `.yml`
+
+Works with any OpenAI-compatible API, including Ollama — see [Configuration](#configuration) for env vars.
+
 ## JSON output
 
 Every command (except `context`, which is always JSON) supports `--json`:
@@ -341,8 +368,20 @@ plan goals --status active --json | jq 'group_by(.areaId) | map({area: .[0].area
 | Environment variable | Default | Description |
 |---------------------|---------|-------------|
 | `PLANNER_HOME` | `~/.planner` | Directory for the database file |
+| `PLANNER_AI_API_KEY` | — | API key (required for AI chat) |
+| `PLANNER_AI_BASE_URL` | `https://api.openai.com/v1` | API base URL (set to `http://localhost:11434/v1` for Ollama) |
+| `PLANNER_AI_MODEL` | `gpt-4o` | Model name (e.g., `mistral` for Ollama) |
 
 The database is a single SQLite file at `$PLANNER_HOME/planner.db`.
+
+**Ollama example:**
+
+```bash
+PLANNER_AI_API_KEY=ollama \
+PLANNER_AI_BASE_URL=http://localhost:11434/v1 \
+PLANNER_AI_MODEL=mistral \
+plan tui
+```
 
 ## Data model
 
