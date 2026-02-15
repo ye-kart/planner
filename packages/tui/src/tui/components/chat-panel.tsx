@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Box, Text, useInput } from 'ink';
 import TextInput from 'ink-text-input';
 import { useTheme } from '../hooks/use-theme.js';
-import type { ChatService } from '../../services/chat.service.js';
+import type { ChatService } from '@planner/ai';
 import type { Screen } from '../types.js';
 
 interface DisplayMessage {

@@ -1,7 +1,6 @@
-import type { Screen } from '../tui/types.js';
 import { type ContextService, today } from '@planner/core';
 
-export function buildSystemPrompt(currentScreen: Screen, contextService: ContextService): string {
+export function buildSystemPrompt(currentScreen: string, contextService: ContextService): string {
   const todayDate = today();
   const todaySummary = JSON.stringify(contextService.today(todayDate), null, 2);
   const allData = JSON.stringify(contextService.all(), null, 2);

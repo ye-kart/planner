@@ -407,7 +407,7 @@ Areas
 | Component | Technology |
 |-----------|-----------|
 | Language | TypeScript (strict mode) |
-| Monorepo | pnpm workspaces (`@planner/core`, `@planner/cli`, `@planner/tui`) |
+| Monorepo | pnpm workspaces (`@planner/core`, `@planner/ai`, `@planner/cli`, `@planner/tui`) |
 | Database | SQLite via [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) |
 | ORM | [Drizzle ORM](https://orm.drizzle.team/) |
 | CLI framework | [Commander.js](https://github.com/tj/commander.js/) |
