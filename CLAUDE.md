@@ -5,45 +5,83 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-npm run build          # tsc → dist/
-npm run dev            # tsx src/index.ts (no build step)
-npm test               # vitest run (all tests)
+pnpm build                # tsc → dist/ (all packages, in dependency order)
+pnpm dev                  # tsx packages/cli/src/index.ts (no build step)
+pnpm test                 # vitest run (all tests)
 npx vitest run tests/unit              # unit tests only
 npx vitest run tests/integration       # integration tests only
 npx vitest run tests/e2e               # E2E tests only
 npx vitest run tests/unit/streak.test.ts  # single file
-npm run lint           # tsc --noEmit (type-check only)
+pnpm lint                 # tsc --noEmit (all packages)
+pnpm --filter @planner/core build      # build single package
 ```
+
+## Monorepo Structure
+
+pnpm workspace with three packages:
+
+```
+packages/
+  core/    → @planner/core  — headless engine (zero UI deps)
+  cli/     → @planner/cli   — Commander.js CLI
+  tui/     → @planner/tui   — Ink/React terminal UI + AI chat
+```
+
+Dependency graph: `cli → tui → core`. Core has no workspace dependencies.
+
+**Workspace config:** `pnpm-workspace.yaml` declares `packages/*`. Each package has its own `package.json` and `tsconfig.json` extending `tsconfig.base.json`.
+
+**TypeScript project references:** Root `tsconfig.json` references all three packages. Each package's `tsconfig.json` uses `composite: true` and references its dependencies.
 
 ## Architecture
 
 Strict 4-layer architecture — each layer only imports the one below:
 
 ```
-Commands (src/commands/)     → parse args, call services, format output
-Services (src/services/)     → business logic, validation, orchestration
-Repositories (src/repositories/) → Drizzle queries, no logic
-Database (src/db/)           → SQLite via better-sqlite3
+Commands (packages/cli/src/commands/)        → parse args, call services, format output
+Services (packages/core/src/services/)       → business logic, validation, orchestration
+Repositories (packages/core/src/repositories/) → Drizzle queries, no logic
+Database (packages/core/src/db/)             → SQLite via better-sqlite3
 ```
 
 **Rules:** Commands never import repositories. Services never import Commander or formatters. Repositories never validate.
 
-**DI:** Constructor injection wired in `src/container.ts` as lazy singletons. No framework. `getContainer()` for production, `createTestContainer(createTestDb())` for tests.
+**DI:** Constructor injection wired in `packages/core/src/container.ts` as lazy singletons. No framework. `getContainer()` for production, `createTestContainer(createTestDb())` for tests. TUI extends core container via `createTuiContainer()` in `packages/tui/src/container.ts` (adds `ChatService`).
 
 **Sync everywhere:** better-sqlite3 is synchronous. No `async/await` in the entire codebase.
 
+## Package Responsibilities
+
+### @planner/core (`packages/core/`)
+- Database: schema, migrations, connection, seed
+- Repositories: area, goal, task, habit, milestone, completion, conversation, message
+- Services: area, goal, task, habit, init, status, context, config, export, streak
+- Utils: date, id, guard, output, paths
+- Errors: PlannerError, NotFoundError, ValidationError, NotInitializedError
+- Barrel export: `packages/core/src/index.ts` — public API surface
+
+### @planner/cli (`packages/cli/`)
+- Commands: areas, goals, tasks, habits, init, status, context, export, tui
+- Formatters: area, goal, task, habit, status
+- Entry point: `packages/cli/src/index.ts` (bin: `plan`)
+
+### @planner/tui (`packages/tui/`)
+- TUI: app, screens (areas, goals, tasks, habits, dashboard), components, themes, hooks
+- AI chat: chat.service, chat-prompt, chat-tools
+- Container: `createTuiContainer()` extending core
+
 ## Key Conventions
 
-- **Import extensions:** Always use `.js` in imports (`import { x } from './foo.js'`) — required by NodeNext module resolution
+- **Import extensions:** Always use `.js` in relative imports (`import { x } from './foo.js'`). Cross-package imports use bare specifiers (`import { x } from '@planner/core'`) — no extension needed.
 - **Strict TypeScript:** No `any` except repository update methods (Drizzle partial type limitation)
-- **Dates:** Always `YYYY-MM-DD` strings, never Date objects in storage. Use helpers from `src/utils/date.ts`
-- **IDs:** 8-char alphanumeric via `generateId()` in `src/utils/id.ts`
+- **Dates:** Always `YYYY-MM-DD` strings, never Date objects in storage. Use helpers from `packages/core/src/utils/date.ts`
+- **IDs:** 8-char alphanumeric via `generateId()` in `packages/core/src/utils/id.ts`
 - **Naming:** Files `kebab-case`, classes `PascalCase`, functions `camelCase`, DB columns `snake_case`, TS properties `camelCase`
 - **Output:** Commands use `formatOutput(data, humanFormatter, { json })` to switch between JSON and human-readable. Context commands always output JSON directly.
 
 ## Error Handling
 
-All domain errors extend `PlannerError` (`src/errors.ts`): `NotFoundError`, `ValidationError`, `NotInitializedError`. Caught at the CLI layer in `src/index.ts`. Services throw, commands catch.
+All domain errors extend `PlannerError` (`packages/core/src/errors.ts`): `NotFoundError`, `ValidationError`, `NotInitializedError`. Caught at the CLI layer in `packages/cli/src/index.ts`. Services throw, commands catch.
 
 ## CLI Patterns
 
@@ -54,15 +92,15 @@ All domain errors extend `PlannerError` (`src/errors.ts`): `NotFoundError`, `Val
 
 ## Database
 
-- Schema source of truth: `src/db/schema.ts` (Drizzle table definitions)
-- Migrations: `src/db/migrate.ts` — raw `CREATE TABLE IF NOT EXISTS` statements, run individually (Drizzle's `db.run()` only supports single statements)
-- Foreign keys require `pragma('foreign_keys = ON')` — set in `src/db/connection.ts`
+- Schema source of truth: `packages/core/src/db/schema.ts` (Drizzle table definitions)
+- Migrations: `packages/core/src/db/migrate.ts` — raw `CREATE TABLE IF NOT EXISTS` statements, run individually (Drizzle's `db.run()` only supports single statements)
+- Foreign keys require `pragma('foreign_keys = ON')` — set in `packages/core/src/db/connection.ts`
 - Deleting areas/goals orphans children (`SET NULL`). Deleting goals cascades milestones. Deleting habits cascades completions.
 - Drizzle queries: `.get()` for single row, `.all()` for arrays, `.run()` for mutations
 
 ## Testing
 
-Three layers, all use Vitest with globals enabled (no imports needed for describe/it/expect):
+Three layers, all use Vitest with globals enabled (no imports needed for describe/it/expect). Tests live at the workspace root in `tests/`. Vitest resolve aliases map `@planner/core`, `@planner/cli`, and `@planner/tui` to source entry points (no build required for testing).
 
 | Layer | Pattern | Key helper |
 |-------|---------|------------|
@@ -101,9 +139,9 @@ Example: `✨ Add habit archiving command` not `Added habit archiving command`
 
 ## Adding Features
 
-**New command:** Add service method → register CLI command with `ensureInitialized()` + `formatOutput()` → add integration + E2E tests.
+**New command:** Add service method in `@planner/core` → register CLI command in `@planner/cli` with `ensureInitialized()` + `formatOutput()` → add integration + E2E tests.
 
-**New entity:** schema.ts table → migrate.ts CREATE TABLE → repository → service → formatter → command → wire in container.ts → update context.service.ts → tests.
+**New entity:** schema.ts table → migrate.ts CREATE TABLE → repository → service (in `@planner/core`) → export from `packages/core/src/index.ts` → formatter → command (in `@planner/cli`) → wire in container.ts → update context.service.ts → tests.
 
 **Schema change:** Update schema.ts + add ALTER TABLE in migrate.ts. New columns must have defaults or be nullable.
 
@@ -120,6 +158,6 @@ vhs demo.tape              # run the tape → generates screenshots/ + demo.gif
 The tape file (`demo.tape`) scripts terminal interactions: launches the TUI, navigates screens, and captures PNGs. Use `Hide`/`Show` to hide startup noise (npm output). Screenshots land in `screenshots/`.
 
 Key patterns:
-- `Set Shell "bash"` + `Hide` → `Type "clear && npx tsx src/index.ts tui --theme purple"` → `Enter` → `Sleep 5s` → `Show` — hides boot sequence
+- `Set Shell "bash"` + `Hide` → `Type "clear && npx tsx packages/cli/src/index.ts tui --theme purple"` → `Enter` → `Sleep 5s` → `Show` — hides boot sequence
 - `Type "2"` navigates to screen 2 (Areas), `Screenshot screenshots/02-areas.png` captures it
-- TUI source: `src/tui/` (Ink + React), screens in `src/tui/screens/`, themes: neon, matrix, purple
+- TUI source: `packages/tui/src/tui/` (Ink + React), screens in `packages/tui/src/tui/screens/`, themes: neon, matrix, purple

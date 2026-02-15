@@ -46,15 +46,15 @@ Habits:
 ```bash
 git clone https://github.com/your-username/planner-cli.git
 cd planner-cli
-npm install
-npm run build
-npm link
+pnpm install
+pnpm build
+pnpm link --global --filter @planner/cli
 ```
 
 ### Requirements
 
 - Node.js >= 18
-- npm >= 9
+- pnpm >= 9
 
 ## Quick start
 
@@ -407,9 +407,11 @@ Areas
 | Component | Technology |
 |-----------|-----------|
 | Language | TypeScript (strict mode) |
+| Monorepo | pnpm workspaces (`@planner/core`, `@planner/cli`, `@planner/tui`) |
 | Database | SQLite via [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) |
 | ORM | [Drizzle ORM](https://orm.drizzle.team/) |
 | CLI framework | [Commander.js](https://github.com/tj/commander.js/) |
+| TUI framework | [Ink](https://github.com/vadimdemedes/ink) (React for CLI) |
 | IDs | [nanoid](https://github.com/ai/nanoid) (custom 8-char alphanumeric) |
 | Testing | [Vitest](https://vitest.dev/) |
 
