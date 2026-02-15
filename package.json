@@ -1,61 +1,33 @@
 {
-  "name": "planner-cli",
-  "version": "1.0.0",
-  "description": "A headless CLI life planner — organize areas, goals, tasks, and habits from the terminal",
+  "private": true,
+  "description": "A CLI life planner — organize areas, goals, tasks, and habits from the terminal",
   "type": "module",
   "license": "MIT",
-  "keywords": [
-    "cli",
-    "planner",
-    "life-planner",
-    "goals",
-    "habits",
-    "tasks",
-    "productivity",
-    "streak",
-    "terminal"
-  ],
   "engines": {
     "node": ">=18"
   },
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ],
-  "bin": {
-    "plan": "./dist/index.js"
-  },
   "scripts": {
-    "build": "tsc",
-    "dev": "node --env-file=.env --import tsx/esm src/index.ts",
+    "build": "pnpm -r build",
+    "dev": "pnpm --filter @planner/cli dev",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "tsc --noEmit",
-    "generate": "drizzle-kit generate",
-    "migrate": "tsx src/db/migrate.ts"
-  },
-  "dependencies": {
-    "better-sqlite3": "^11.8.1",
-    "chalk": "^5.6.2",
-    "commander": "^13.1.0",
-    "drizzle-orm": "^0.38.4",
-    "ink": "^5.2.1",
-    "ink-select-input": "^6.2.0",
-    "ink-spinner": "^5.0.0",
-    "ink-text-input": "^6.0.0",
-    "nanoid": "^5.1.2",
-    "openai": "^4.104.0",
-    "react": "^18.3.1"
+    "lint": "pnpm -r lint"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.12",
     "@types/node": "^22.13.1",
     "@types/react": "^18.3.28",
+    "react": "^18.3.1",
     "drizzle-kit": "^0.30.4",
     "ink-testing-library": "^4.0.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
     "vitest": "^3.0.5"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild"
+    ]
   }
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateStreaks } from '../../src/services/streak.js';
+import { calculateStreaks } from '@planner/core';
 
 describe('calculateStreaks', () => {
   describe('daily frequency', () => {

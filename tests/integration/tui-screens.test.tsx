@@ -1,16 +1,16 @@
 import { render } from 'ink-testing-library';
-import { ThemeContext, themes } from '../../src/tui/themes/index.js';
-import { ServicesContext } from '../../src/tui/hooks/use-services.js';
-import { createTestContainer } from '../../src/container.js';
+import { ThemeContext, themes } from '../../packages/tui/src/tui/themes/index.js';
+import { ServicesContext } from '../../packages/tui/src/tui/hooks/use-services.js';
+import { createTestContainer } from '@planner/core';
 import { createTestDb } from './helpers/db.js';
-import { DashboardScreen } from '../../src/tui/screens/dashboard.js';
-import { AreasScreen } from '../../src/tui/screens/areas.js';
-import { GoalsScreen } from '../../src/tui/screens/goals.js';
-import { TasksScreen } from '../../src/tui/screens/tasks.js';
-import { HabitsScreen } from '../../src/tui/screens/habits.js';
-import { TopBar } from '../../src/tui/components/top-bar.js';
-import { BottomBar } from '../../src/tui/components/bottom-bar.js';
-import { Screen } from '../../src/tui/types.js';
+import { DashboardScreen } from '../../packages/tui/src/tui/screens/dashboard.js';
+import { AreasScreen } from '../../packages/tui/src/tui/screens/areas.js';
+import { GoalsScreen } from '../../packages/tui/src/tui/screens/goals.js';
+import { TasksScreen } from '../../packages/tui/src/tui/screens/tasks.js';
+import { HabitsScreen } from '../../packages/tui/src/tui/screens/habits.js';
+import { TopBar } from '../../packages/tui/src/tui/components/top-bar.js';
+import { BottomBar } from '../../packages/tui/src/tui/components/bottom-bar.js';
+import { Screen } from '../../packages/tui/src/tui/types.js';
 import React from 'react';
 
 const neon = themes['neon']!;
@@ -25,13 +25,16 @@ const noop = () => {};
 
 function createWrapper() {
   const db = createTestDb();
-  const container = createTestContainer(db);
+  const core = createTestContainer(db);
   // Seed some data
-  container.areaService.add('Work', 'Work area');
-  container.areaService.add('Health');
-  const goal = container.goalService.add('Learn TypeScript', { priority: 'high' });
-  container.taskService.add('Write tests', { priority: 'medium' });
-  container.habitService.add('Exercise', { frequency: 'daily' });
+  core.areaService.add('Work', 'Work area');
+  core.areaService.add('Health');
+  const goal = core.goalService.add('Learn TypeScript', { priority: 'high' });
+  core.taskService.add('Write tests', { priority: 'medium' });
+  core.habitService.add('Exercise', { frequency: 'daily' });
+
+  // Screens don't use chatService, provide a stub for type compatibility
+  const container = { ...core, chatService: null as any };
 
   function Wrapper({ children }: { children: React.ReactNode }) {
     return (

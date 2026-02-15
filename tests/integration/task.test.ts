@@ -1,15 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createTestDb } from './helpers/db.js';
-import { AreaRepository } from '../../src/repositories/area.repository.js';
-import { GoalRepository } from '../../src/repositories/goal.repository.js';
-import { TaskRepository } from '../../src/repositories/task.repository.js';
-import { MilestoneRepository } from '../../src/repositories/milestone.repository.js';
-import { HabitRepository } from '../../src/repositories/habit.repository.js';
-import { AreaService } from '../../src/services/area.service.js';
-import { GoalService } from '../../src/services/goal.service.js';
-import { TaskService } from '../../src/services/task.service.js';
-import { today } from '../../src/utils/date.js';
-import type { DB } from '../../src/db/connection.js';
+import {
+  AreaRepository, GoalRepository, TaskRepository, MilestoneRepository, HabitRepository,
+  AreaService, GoalService, TaskService,
+  today, type DB,
+} from '@planner/core';
 
 let db: DB;
 let areaService: AreaService;

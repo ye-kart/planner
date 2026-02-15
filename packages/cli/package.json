@@ -1,0 +1,19 @@
+{
+  "name": "@planner/cli",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "plan": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "node --env-file=../../.env --import tsx/esm src/index.ts",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@planner/core": "workspace:*",
+    "@planner/tui": "workspace:*",
+    "chalk": "^5.6.2",
+    "commander": "^13.1.0"
+  }
+}

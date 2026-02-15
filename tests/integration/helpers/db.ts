@@ -1,5 +1,4 @@
-import { createMemoryDb, type DB } from '../../../src/db/connection.js';
-import { runMigrations } from '../../../src/db/migrate.js';
+import { createMemoryDb, runMigrations, type DB } from '@planner/core';
 
 export function createTestDb(): DB {
   const db = createMemoryDb();

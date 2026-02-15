@@ -1,18 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createTestDb } from './helpers/db.js';
-import { AreaRepository } from '../../src/repositories/area.repository.js';
-import { GoalRepository } from '../../src/repositories/goal.repository.js';
-import { MilestoneRepository } from '../../src/repositories/milestone.repository.js';
-import { TaskRepository } from '../../src/repositories/task.repository.js';
-import { HabitRepository } from '../../src/repositories/habit.repository.js';
-import { CompletionRepository } from '../../src/repositories/completion.repository.js';
-import { AreaService } from '../../src/services/area.service.js';
-import { GoalService } from '../../src/services/goal.service.js';
-import { TaskService } from '../../src/services/task.service.js';
-import { HabitService } from '../../src/services/habit.service.js';
-import { ContextService } from '../../src/services/context.service.js';
-import { ExportService } from '../../src/services/export.service.js';
-import type { DB } from '../../src/db/connection.js';
+import {
+  AreaRepository, GoalRepository, MilestoneRepository, TaskRepository,
+  HabitRepository, CompletionRepository,
+  AreaService, GoalService, TaskService, HabitService, ContextService, ExportService,
+  type DB,
+} from '@planner/core';
 
 let db: DB;
 let areaService: AreaService;

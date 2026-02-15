@@ -1,8 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createTestDb } from './helpers/db.js';
-import { createTestContainer } from '../../src/container.js';
-import { today } from '../../src/utils/date.js';
-import type { DB } from '../../src/db/connection.js';
+import { createTestContainer, today, type DB } from '@planner/core';
 
 let db: DB;
 let container: ReturnType<typeof createTestContainer>;

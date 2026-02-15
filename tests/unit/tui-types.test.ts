@@ -1,6 +1,6 @@
-import { Screen, SCREEN_ORDER, SCREEN_KEYS, SCREEN_LABELS } from '../../src/tui/types.js';
-import { themes, themeNames } from '../../src/tui/themes/index.js';
-import type { ColorTokens } from '../../src/tui/themes/tokens.js';
+import { Screen, SCREEN_ORDER, SCREEN_KEYS, SCREEN_LABELS } from '../../packages/tui/src/tui/types.js';
+import { themes, themeNames } from '../../packages/tui/src/tui/themes/index.js';
+import type { ColorTokens } from '../../packages/tui/src/tui/themes/tokens.js';
 
 describe('TUI types', () => {
   it('has 5 screens in order', () => {
