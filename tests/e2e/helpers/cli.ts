@@ -20,7 +20,7 @@ export function cleanupTestDir(dir: string): void {
 export function runCli(args: string, plannerHome: string): { stdout: string; stderr: string; exitCode: number } {
   try {
     const stdout = execSync(
-      `npx tsx ${join(process.cwd(), 'src/index.ts')} ${args}`,
+      `npx tsx ${join(process.cwd(), 'packages/cli/src/index.ts')} ${args}`,
       {
         env: { ...process.env, PLANNER_HOME: plannerHome },
         encoding: 'utf-8',

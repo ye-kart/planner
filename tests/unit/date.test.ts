@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { toISODate, parseDate, dayOfWeek, isoWeek, addDays, diffDays, formatDateHuman } from '../../src/utils/date.js';
+import { toISODate, parseDate, dayOfWeek, isoWeek, addDays, diffDays, formatDateHuman } from '@planner/core';
 
 describe('date utilities', () => {
   it('toISODate formats correctly', () => {

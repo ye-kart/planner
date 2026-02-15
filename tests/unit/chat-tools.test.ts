@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { writeFileSync, mkdirSync, rmSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { getToolDefinitions, executeTool, type ToolServices } from '../../src/services/chat-tools.js';
+import { getToolDefinitions, executeTool, type ToolServices } from '../../packages/tui/src/services/chat-tools.js';
 
 // Minimal stub services — read_document doesn't use them
 const stubServices = {} as ToolServices;

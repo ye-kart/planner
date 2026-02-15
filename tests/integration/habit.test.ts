@@ -1,11 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createTestDb } from './helpers/db.js';
-import { AreaRepository } from '../../src/repositories/area.repository.js';
-import { GoalRepository } from '../../src/repositories/goal.repository.js';
-import { HabitRepository } from '../../src/repositories/habit.repository.js';
-import { CompletionRepository } from '../../src/repositories/completion.repository.js';
-import { HabitService } from '../../src/services/habit.service.js';
-import type { DB } from '../../src/db/connection.js';
+import { AreaRepository, GoalRepository, HabitRepository, CompletionRepository, HabitService, type DB } from '@planner/core';
 
 let db: DB;
 let habitService: HabitService;
