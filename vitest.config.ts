@@ -9,6 +9,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@planner/core': resolve(__dirname, 'packages/core/src/index.ts'),
+      '@planner/ai': resolve(__dirname, 'packages/ai/src/index.ts'),
       '@planner/cli': resolve(__dirname, 'packages/cli/src/index.ts'),
       '@planner/tui': resolve(__dirname, 'packages/tui/src/index.ts'),
     },

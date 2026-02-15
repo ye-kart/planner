@@ -9,7 +9,6 @@ import {
 } from '@planner/core';
 import { getToolDefinitions, executeTool, type ToolServices } from './chat-tools.js';
 import { buildSystemPrompt } from './chat-prompt.js';
-import type { Screen } from '../tui/types.js';
 
 export interface StreamCallbacks {
   onToken: (token: string) => void;
@@ -75,7 +74,7 @@ export class ChatService {
   async sendMessage(
     conversationId: string,
     userMessage: string,
-    currentScreen: Screen,
+    currentScreen: string,
     callbacks: StreamCallbacks,
   ): Promise<void> {
     const config = this.configService.getChatConfig();
@@ -141,7 +140,7 @@ export class ChatService {
     model: string,
     apiMessages: ChatCompletionMessageParam[],
     conversationId: string,
-    currentScreen: Screen,
+    currentScreen: string,
     callbacks: StreamCallbacks,
   ): Promise<void> {
     const tools = getToolDefinitions();

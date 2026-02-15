@@ -11,7 +11,7 @@ import { AreasScreen } from '../screens/areas.js';
 import { GoalsScreen } from '../screens/goals.js';
 import { TasksScreen } from '../screens/tasks.js';
 import { HabitsScreen } from '../screens/habits.js';
-import type { ChatService } from '../../services/chat.service.js';
+import type { ChatService } from '@planner/ai';
 
 interface LayoutProps {
   screen: Screen;

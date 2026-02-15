@@ -18,20 +18,21 @@ pnpm --filter @planner/core build      # build single package
 
 ## Monorepo Structure
 
-pnpm workspace with three packages:
+pnpm workspace with four packages:
 
 ```
 packages/
   core/    → @planner/core  — headless engine (zero UI deps)
+  ai/      → @planner/ai    — AI chat service, tools, prompt (UI-agnostic)
   cli/     → @planner/cli   — Commander.js CLI
-  tui/     → @planner/tui   — Ink/React terminal UI + AI chat
+  tui/     → @planner/tui   — Ink/React terminal UI
 ```
 
-Dependency graph: `cli → tui → core`. Core has no workspace dependencies.
+Dependency graph: `cli → tui → ai → core`. Core has no workspace dependencies.
 
 **Workspace config:** `pnpm-workspace.yaml` declares `packages/*`. Each package has its own `package.json` and `tsconfig.json` extending `tsconfig.base.json`.
 
-**TypeScript project references:** Root `tsconfig.json` references all three packages. Each package's `tsconfig.json` uses `composite: true` and references its dependencies.
+**TypeScript project references:** Root `tsconfig.json` references all four packages. Each package's `tsconfig.json` uses `composite: true` and references its dependencies.
 
 ## Architecture
 
@@ -46,7 +47,7 @@ Database (packages/core/src/db/)             → SQLite via better-sqlite3
 
 **Rules:** Commands never import repositories. Services never import Commander or formatters. Repositories never validate.
 
-**DI:** Constructor injection wired in `packages/core/src/container.ts` as lazy singletons. No framework. `getContainer()` for production, `createTestContainer(createTestDb())` for tests. TUI extends core container via `createTuiContainer()` in `packages/tui/src/container.ts` (adds `ChatService`).
+**DI:** Constructor injection wired in `packages/core/src/container.ts` as lazy singletons. No framework. `getContainer()` for production, `createTestContainer(createTestDb())` for tests. AI extends core container via `createAiContainer()` in `packages/ai/src/container.ts` (adds `ChatService`). TUI delegates to AI container via `createTuiContainer()` in `packages/tui/src/container.ts`.
 
 **Sync everywhere:** better-sqlite3 is synchronous. No `async/await` in the entire codebase.
 
@@ -65,10 +66,15 @@ Database (packages/core/src/db/)             → SQLite via better-sqlite3
 - Formatters: area, goal, task, habit, status
 - Entry point: `packages/cli/src/index.ts` (bin: `plan`)
 
+### @planner/ai (`packages/ai/`)
+- Services: chat.service (OpenAI streaming + tool loop), chat-prompt (system prompt builder), chat-tools (tool definitions + executor)
+- Container: `createAiContainer()` extending core with `ChatService`
+- UI-agnostic: accepts `currentScreen: string` instead of TUI's `Screen` enum
+- Barrel export: `packages/ai/src/index.ts`
+
 ### @planner/tui (`packages/tui/`)
 - TUI: app, screens (areas, goals, tasks, habits, dashboard), components, themes, hooks
-- AI chat: chat.service, chat-prompt, chat-tools
-- Container: `createTuiContainer()` extending core
+- Container: `createTuiContainer()` delegating to `@planner/ai`
 
 ## Key Conventions
 
@@ -100,7 +106,7 @@ All domain errors extend `PlannerError` (`packages/core/src/errors.ts`): `NotFou
 
 ## Testing
 
-Three layers, all use Vitest with globals enabled (no imports needed for describe/it/expect). Tests live at the workspace root in `tests/`. Vitest resolve aliases map `@planner/core`, `@planner/cli`, and `@planner/tui` to source entry points (no build required for testing).
+Three layers, all use Vitest with globals enabled (no imports needed for describe/it/expect). Tests live at the workspace root in `tests/`. Vitest resolve aliases map `@planner/core`, `@planner/ai`, `@planner/cli`, and `@planner/tui` to source entry points (no build required for testing).
 
 | Layer | Pattern | Key helper |
 |-------|---------|------------|
