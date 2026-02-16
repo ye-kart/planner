@@ -20,7 +20,8 @@ export function InlineForm({ open, initialValues = {}, fields, onSubmit, onCance
       setValues(initialValues);
       setTimeout(() => firstInputRef.current?.focus(), 50);
     }
-  }, [open]);
+    return () => setInputFocused(false);
+  }, [open, setInputFocused]);
 
   if (!open) return null;
 
@@ -30,6 +31,9 @@ export function InlineForm({ open, initialValues = {}, fields, onSubmit, onCance
         onSubmit={(e) => {
           e.preventDefault();
           onSubmit(values);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') onCancel();
         }}
         className="space-y-3"
       >

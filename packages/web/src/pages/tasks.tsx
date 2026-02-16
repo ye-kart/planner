@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useTasks, useCreateTask, useDeleteTask } from '../hooks/use-api';
+import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from '../hooks/use-api';
 import { tasksApi } from '../api/tasks.api';
 import { useQueryClient } from '@tanstack/react-query';
 import { useKeyboardStore } from '../stores/keyboard.store';
@@ -15,13 +15,19 @@ export function TasksPage() {
   const filterParam = filter === 'all' ? undefined : filter;
   const { data: tasks, isLoading } = useTasks({ status: filterParam });
   const createTask = useCreateTask();
+  const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
   const qc = useQueryClient();
 
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [showAdd, setShowAdd] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const { inputFocused, overlayOpen } = useKeyboardStore();
+
+  useEffect(() => {
+    document.querySelector('[data-selected]')?.scrollIntoView({ block: 'nearest' });
+  }, [selectedIdx]);
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
@@ -35,8 +41,17 @@ export function TasksPage() {
         case 'k': case 'ArrowUp':
           setSelectedIdx((i) => Math.max(i - 1, 0));
           break;
+        case 'Home':
+          setSelectedIdx(0);
+          break;
+        case 'End':
+          setSelectedIdx(tasks.length - 1);
+          break;
         case 'n':
           setShowAdd(true);
+          break;
+        case 'e':
+          if (tasks[selectedIdx]) setEditId(tasks[selectedIdx].id);
           break;
         case 'x':
           if (tasks[selectedIdx]) setDeleteId(tasks[selectedIdx].id);
@@ -105,12 +120,34 @@ export function TasksPage() {
         submitLabel="Create"
       />
 
+      {editId && (
+        <InlineForm
+          open
+          initialValues={{
+            title: tasks?.find((t) => t.id === editId)?.title ?? '',
+            description: tasks?.find((t) => t.id === editId)?.description ?? '',
+            dueDate: tasks?.find((t) => t.id === editId)?.dueDate ?? '',
+          }}
+          fields={[
+            { name: 'title', label: 'Title', required: true },
+            { name: 'description', label: 'Description' },
+            { name: 'dueDate', label: 'Due Date', type: 'date' },
+          ]}
+          onSubmit={(vals) => {
+            updateTask.mutate({ id: editId, title: vals.title, description: vals.description || undefined, dueDate: vals.dueDate || undefined });
+            setEditId(null);
+          }}
+          onCancel={() => setEditId(null)}
+        />
+      )}
+
       <div className="space-y-1">
         {tasks?.map((task, i) => {
           const overdue = task.dueDate && task.dueDate < today && task.status !== 'done';
           return (
             <div
               key={task.id}
+              data-selected={i === selectedIdx ? '' : undefined}
               className={`px-4 py-3 rounded flex items-center gap-3 transition-colors cursor-pointer ${
                 i === selectedIdx ? 'bg-[var(--color-bg-highlight)] border border-[var(--color-border-active)]' : 'hover:bg-[var(--color-bg-highlight)] border border-transparent'
               }`}

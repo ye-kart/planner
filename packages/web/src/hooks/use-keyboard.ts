@@ -56,13 +56,6 @@ export function useKeyboard() {
         document.dispatchEvent(new CustomEvent('toggle-chat'));
         return;
       }
-
-      // Search overlay
-      if (e.key === '/' || (e.key === 'k' && (e.metaKey || e.ctrlKey))) {
-        e.preventDefault();
-        useKeyboardStore.getState().setOverlayOpen(true);
-        return;
-      }
     }
 
     document.addEventListener('keydown', handleKeyDown);

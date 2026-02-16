@@ -4,33 +4,47 @@ const globalHints = [
   { key: '1-5', label: 'Navigate' },
   { key: 't', label: 'Theme' },
   { key: 'c', label: 'Chat' },
-  { key: '/', label: 'Search' },
 ];
 
 const screenHints: Record<string, Array<{ key: string; label: string }>> = {
-  '/': [],
+  '/': [
+    { key: 'j/k', label: 'Navigate' },
+    { key: 'Space', label: 'Toggle' },
+  ],
   '/areas': [
+    { key: 'j/k', label: 'Navigate' },
     { key: 'n', label: 'New' },
     { key: 'e', label: 'Edit' },
     { key: 'x', label: 'Delete' },
+    { key: 'Esc', label: 'Cancel' },
   ],
   '/goals': [
+    { key: 'j/k', label: 'Navigate' },
     { key: 'n', label: 'New' },
     { key: 'e', label: 'Edit' },
+    { key: 'x', label: 'Delete' },
     { key: 'd', label: 'Done' },
     { key: 'f', label: 'Filter' },
+    { key: 'Esc', label: 'Cancel' },
   ],
   '/tasks': [
+    { key: 'j/k', label: 'Navigate' },
     { key: 'n', label: 'New' },
     { key: 'e', label: 'Edit' },
+    { key: 'x', label: 'Delete' },
     { key: 'd', label: 'Done' },
     { key: 's', label: 'Start' },
     { key: 'f', label: 'Filter' },
+    { key: 'Esc', label: 'Cancel' },
   ],
   '/habits': [
+    { key: 'j/k', label: 'Navigate' },
     { key: 'n', label: 'New' },
+    { key: 'e', label: 'Edit' },
+    { key: 'x', label: 'Delete' },
     { key: 'Space', label: 'Toggle' },
     { key: 'v', label: 'View' },
+    { key: 'Esc', label: 'Cancel' },
   ],
 };
 

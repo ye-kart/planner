@@ -1,4 +1,6 @@
+import { useState, useEffect } from 'react';
 import { useStatus, useCheckHabit, useUncheckHabit } from '../hooks/use-api';
+import { useKeyboardStore } from '../stores/keyboard.store';
 import { Panel } from '../components/shared/panel';
 import { PriorityBadge } from '../components/shared/priority-badge';
 import { StreakDisplay } from '../components/shared/streak-display';
@@ -7,6 +9,54 @@ export function DashboardPage() {
   const { data: status, isLoading } = useStatus();
   const checkHabit = useCheckHabit();
   const uncheckHabit = useUncheckHabit();
+  const [selectedIdx, setSelectedIdx] = useState(0);
+  const { inputFocused, overlayOpen } = useKeyboardStore();
+
+  useEffect(() => {
+    document.querySelector('[data-selected]')?.scrollIntoView({ block: 'nearest' });
+  }, [selectedIdx]);
+
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (inputFocused || overlayOpen) return;
+      if (!status) return;
+
+      const { habitsDueToday } = status;
+      if (habitsDueToday.length === 0) return;
+
+      switch (e.key) {
+        case 'j':
+        case 'ArrowDown':
+          setSelectedIdx((i) => Math.min(i + 1, habitsDueToday.length - 1));
+          break;
+        case 'k':
+        case 'ArrowUp':
+          setSelectedIdx((i) => Math.max(i - 1, 0));
+          break;
+        case 'Home':
+          setSelectedIdx(0);
+          break;
+        case 'End':
+          setSelectedIdx(habitsDueToday.length - 1);
+          break;
+        case ' ':
+        case 'Enter': {
+          e.preventDefault();
+          const habit = habitsDueToday[selectedIdx];
+          if (habit) {
+            if (habit.done) {
+              uncheckHabit.mutate({ id: habit.id });
+            } else {
+              checkHabit.mutate({ id: habit.id });
+            }
+          }
+          break;
+        }
+      }
+    }
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [inputFocused, overlayOpen, status, selectedIdx, checkHabit, uncheckHabit]);
 
   if (isLoading || !status) {
     return <div className="text-[var(--color-text-secondary)]">Loading...</div>;
@@ -90,8 +140,14 @@ export function DashboardPage() {
           <p className="text-sm text-[var(--color-text-secondary)]">No habits due today</p>
         ) : (
           <ul className="space-y-2">
-            {habitsDueToday.map((habit) => (
-              <li key={habit.id} className="flex items-center gap-3 text-sm">
+            {habitsDueToday.map((habit, i) => (
+              <li
+                key={habit.id}
+                data-selected={i === selectedIdx ? '' : undefined}
+                className={`flex items-center gap-3 text-sm rounded px-2 py-1 transition-colors ${
+                  i === selectedIdx ? 'bg-[var(--color-bg-highlight)]' : ''
+                }`}
+              >
                 <button
                   onClick={() => {
                     if (habit.done) {

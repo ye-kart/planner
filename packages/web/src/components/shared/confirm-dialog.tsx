@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useKeyboardStore } from '../../stores/keyboard.store';
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -10,14 +11,18 @@ interface ConfirmDialogProps {
 
 export function ConfirmDialog({ open, title, message, onConfirm, onCancel }: ConfirmDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const setOverlayOpen = useKeyboardStore((s) => s.setOverlayOpen);
 
   useEffect(() => {
     if (open) {
       dialogRef.current?.showModal();
+      setOverlayOpen(true);
     } else {
       dialogRef.current?.close();
+      setOverlayOpen(false);
     }
-  }, [open]);
+    return () => setOverlayOpen(false);
+  }, [open, setOverlayOpen]);
 
   if (!open) return null;
 

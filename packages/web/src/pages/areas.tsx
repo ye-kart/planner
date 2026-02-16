@@ -21,6 +21,10 @@ export function AreasPage() {
   const { inputFocused, overlayOpen } = useKeyboardStore();
 
   useEffect(() => {
+    document.querySelector('[data-selected]')?.scrollIntoView({ block: 'nearest' });
+  }, [selectedIdx]);
+
+  useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if (inputFocused || overlayOpen) return;
       if (!areas) return;
@@ -33,6 +37,12 @@ export function AreasPage() {
         case 'k':
         case 'ArrowUp':
           setSelectedIdx((i) => Math.max(i - 1, 0));
+          break;
+        case 'Home':
+          setSelectedIdx(0);
+          break;
+        case 'End':
+          setSelectedIdx(areas.length - 1);
           break;
         case 'Enter':
           if (areas[selectedIdx]) setDetailId(areas[selectedIdx].id);
@@ -142,6 +152,7 @@ export function AreasPage() {
           <button
             key={area.id}
             onClick={() => setDetailId(area.id)}
+            data-selected={i === selectedIdx ? '' : undefined}
             className={`w-full text-left px-4 py-3 rounded flex items-center justify-between transition-colors ${
               i === selectedIdx
                 ? 'bg-[var(--color-bg-highlight)] border border-[var(--color-border-active)]'

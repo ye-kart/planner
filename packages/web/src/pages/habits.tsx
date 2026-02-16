@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useHabits, useHabitsToday, useCreateHabit, useDeleteHabit, useCheckHabit, useUncheckHabit } from '../hooks/use-api';
+import { useHabits, useHabitsToday, useCreateHabit, useUpdateHabit, useDeleteHabit, useCheckHabit, useUncheckHabit } from '../hooks/use-api';
 import { useKeyboardStore } from '../stores/keyboard.store';
 import { StreakDisplay } from '../components/shared/streak-display';
 import { InlineForm } from '../components/shared/inline-form';
@@ -10,17 +10,23 @@ export function HabitsPage() {
   const { data: allHabits } = useHabits();
   const { data: todayHabits } = useHabitsToday();
   const createHabit = useCreateHabit();
+  const updateHabit = useUpdateHabit();
   const deleteHabit = useDeleteHabit();
   const checkHabit = useCheckHabit();
   const uncheckHabit = useUncheckHabit();
 
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [showAdd, setShowAdd] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const { inputFocused, overlayOpen } = useKeyboardStore();
 
   const displayItems = viewMode === 'today' ? todayHabits : allHabits;
   const isToday = viewMode === 'today';
+
+  useEffect(() => {
+    document.querySelector('[data-selected]')?.scrollIntoView({ block: 'nearest' });
+  }, [selectedIdx]);
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
@@ -34,8 +40,17 @@ export function HabitsPage() {
         case 'k': case 'ArrowUp':
           setSelectedIdx((i) => Math.max(i - 1, 0));
           break;
+        case 'Home':
+          setSelectedIdx(0);
+          break;
+        case 'End':
+          setSelectedIdx(displayItems.length - 1);
+          break;
         case 'n':
           setShowAdd(true);
+          break;
+        case 'e':
+          if (displayItems[selectedIdx]) setEditId(displayItems[selectedIdx].id);
           break;
         case 'x':
           if (displayItems[selectedIdx]) setDeleteId(displayItems[selectedIdx].id);
@@ -103,12 +118,30 @@ export function HabitsPage() {
         submitLabel="Create"
       />
 
+      {editId && (
+        <InlineForm
+          open
+          initialValues={{
+            title: displayItems?.find((h) => h.id === editId)?.title ?? '',
+          }}
+          fields={[
+            { name: 'title', label: 'Title', required: true },
+          ]}
+          onSubmit={(vals) => {
+            updateHabit.mutate({ id: editId, title: vals.title });
+            setEditId(null);
+          }}
+          onCancel={() => setEditId(null)}
+        />
+      )}
+
       <div className="space-y-1">
         {displayItems?.map((habit, i) => {
           const isDone = 'done' in habit ? habit.done : false;
           return (
             <div
               key={habit.id}
+              data-selected={i === selectedIdx ? '' : undefined}
               className={`px-4 py-3 rounded flex items-center justify-between transition-colors cursor-pointer ${
                 i === selectedIdx ? 'bg-[var(--color-bg-highlight)] border border-[var(--color-border-active)]' : 'hover:bg-[var(--color-bg-highlight)] border border-transparent'
               }`}

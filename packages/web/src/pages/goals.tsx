@@ -17,16 +17,22 @@ export function GoalsPage() {
   const filterParam = filter === 'all' ? undefined : filter;
   const { data: goals, isLoading } = useGoals({ status: filterParam });
   const createGoal = useCreateGoal();
+  const updateGoal = useUpdateGoal();
   const deleteGoal = useDeleteGoal();
   const qc = useQueryClient();
 
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const { data: detail } = useGoal(detailId ?? '');
   const { inputFocused, overlayOpen } = useKeyboardStore();
+
+  useEffect(() => {
+    document.querySelector('[data-selected]')?.scrollIntoView({ block: 'nearest' });
+  }, [selectedIdx]);
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
@@ -40,6 +46,12 @@ export function GoalsPage() {
         case 'k': case 'ArrowUp':
           setSelectedIdx((i) => Math.max(i - 1, 0));
           break;
+        case 'Home':
+          setSelectedIdx(0);
+          break;
+        case 'End':
+          setSelectedIdx(goals.length - 1);
+          break;
         case 'Enter':
           if (goals[selectedIdx]) setDetailId(goals[selectedIdx].id);
           break;
@@ -48,6 +60,9 @@ export function GoalsPage() {
           break;
         case 'n':
           setShowAdd(true);
+          break;
+        case 'e':
+          if (goals[selectedIdx]) setEditId(goals[selectedIdx].id);
           break;
         case 'x':
           if (goals[selectedIdx]) setDeleteId(goals[selectedIdx].id);
@@ -145,11 +160,33 @@ export function GoalsPage() {
         submitLabel="Create"
       />
 
+      {editId && (
+        <InlineForm
+          open
+          initialValues={{
+            title: goals?.find((g) => g.id === editId)?.title ?? '',
+            description: goals?.find((g) => g.id === editId)?.description ?? '',
+            targetDate: goals?.find((g) => g.id === editId)?.targetDate ?? '',
+          }}
+          fields={[
+            { name: 'title', label: 'Title', required: true },
+            { name: 'description', label: 'Description' },
+            { name: 'targetDate', label: 'Target Date', type: 'date' },
+          ]}
+          onSubmit={(vals) => {
+            updateGoal.mutate({ id: editId, title: vals.title, description: vals.description || undefined, targetDate: vals.targetDate || undefined });
+            setEditId(null);
+          }}
+          onCancel={() => setEditId(null)}
+        />
+      )}
+
       <div className="space-y-1">
         {goals?.map((goal, i) => (
           <button
             key={goal.id}
             onClick={() => setDetailId(goal.id)}
+            data-selected={i === selectedIdx ? '' : undefined}
             className={`w-full text-left px-4 py-3 rounded transition-colors ${
               i === selectedIdx ? 'bg-[var(--color-bg-highlight)] border border-[var(--color-border-active)]' : 'hover:bg-[var(--color-bg-highlight)] border border-transparent'
             }`}
