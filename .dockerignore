@@ -1,0 +1,13 @@
+node_modules
+**/dist
+.git
+.env
+*.db
+screenshots
+demo.tape
+demo.gif
+tests
+*.test.ts
+vitest.config.ts
+CLAUDE.md
+CLAUDE.local.md

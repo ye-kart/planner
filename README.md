@@ -1,6 +1,6 @@
 # plan
 
-A headless, terminal-based life planner. Organize life into areas, set goals, track tasks and habits, review progress — all from the command line.
+A headless life planner with CLI, terminal UI, and web interface. Organize life into areas, set goals, track tasks and habits, review progress — from the command line or the browser.
 
 ```
 $ plan status
@@ -35,13 +35,15 @@ Habits:
 - **Dashboard** — Daily overview of what's due and how you're doing
 - **AI Chat** — Embedded assistant that can read, create, and modify your plans via natural language
 - **Document Import** — Feed the AI a Markdown file and get smart suggestions (no duplicates)
+- **Web App** — Full-featured React SPA with the same 7 color themes, keyboard shortcuts, and AI chat
 - **AI-ready** — `plan context` commands return full JSON trees for agent integration
 - **Export** — Snapshot your entire planner to a well-formatted Markdown file
 - **Portable** — Single SQLite file, zero config, works offline
+- **Deployable** — Dockerfile + fly.toml for one-command deployment to fly.io
 
 ## Installation
 
-### From source
+### From source (CLI)
 
 ```bash
 git clone https://github.com/your-username/planner-cli.git
@@ -49,6 +51,25 @@ cd planner-cli
 pnpm install
 pnpm build
 pnpm link --global --filter @planner/cli
+```
+
+### Web app (local development)
+
+```bash
+pnpm install
+pnpm dev:full     # Starts API server (port 3000) + Vite dev server (port 5173)
+# Or run them separately:
+pnpm dev:api      # API server only
+pnpm dev:web      # Vite dev server only (proxies /api to localhost:3000)
+```
+
+### Deploy to fly.io
+
+```bash
+fly launch
+fly volumes create planner_data --region iad --size 1
+fly secrets set PLANNER_GITHUB_CLIENT_ID=... PLANNER_GITHUB_CLIENT_SECRET=... PLANNER_ALLOWED_GITHUB_USERS=... PLANNER_AI_API_KEY=...
+fly deploy
 ```
 
 ### Requirements
@@ -318,16 +339,16 @@ The Markdown export organizes data hierarchically — areas, goals (with progres
 
 </details>
 
-### AI Chat (TUI)
+### AI Chat (TUI & Web)
 
-The TUI includes an embedded AI assistant that can read, create, and modify your planning data through natural conversation. Press `c` in the TUI to open the chat panel.
+Both the TUI and web app include an embedded AI assistant that can read, create, and modify your planning data through natural conversation. Press `c` to open the chat panel in either interface.
 
 ```bash
-plan tui                              # Launch the terminal UI
-# Then press 'c' to open the AI chat
+plan tui                              # Launch the terminal UI, press 'c' for chat
+# Or use the web app — chat panel slides out from the right
 ```
 
-The assistant has access to 23 tools covering areas, goals, tasks, habits, milestones, and document reading. It sees your full planner state and today's summary in every message.
+The assistant has access to 23 tools covering areas, goals, tasks, habits, milestones, and document reading. It sees your full planner state and today's summary in every message. The web app streams responses via SSE (Server-Sent Events).
 
 #### Document analysis
 
@@ -363,6 +384,41 @@ plan tasks --priority high --json | jq '.[] | select(.dueDate != null)'
 plan goals --status active --json | jq 'group_by(.areaId) | map({area: .[0].areaId, count: length})'
 ```
 
+## Web App
+
+The web app replicates all 5 screens from the TUI — Dashboard, Areas, Goals, Tasks, Habits — with the same 7 color themes and keyboard-driven navigation.
+
+### Keyboard shortcuts
+
+| Key | Action |
+|-----|--------|
+| `1`–`5` | Navigate to screen |
+| `Tab`/`Shift+Tab` | Next/previous screen |
+| `t` | Cycle theme |
+| `c` | Toggle AI chat |
+| `/` | Search |
+| `j`/`k` | Navigate list |
+| `Enter` | View detail |
+| `n` | New item |
+| `e` | Edit selected |
+| `x` | Delete (with confirmation) |
+| `d` | Mark done |
+| `s` | Start task |
+| `f`/`F` | Cycle filters |
+| `Space` | Toggle habit/milestone |
+| `Backspace` | Back to list |
+| `Escape` | Close overlay |
+
+Single-character shortcuts are suppressed when an input field is focused.
+
+### Themes
+
+7 themes available — neon, matrix, purple, ember, frost, sakura, aurora. Press `t` to cycle. Theme preference persists to localStorage.
+
+### Authentication
+
+When `PLANNER_GITHUB_CLIENT_ID` is set, the web app requires GitHub OAuth login. Set `PLANNER_ALLOWED_GITHUB_USERS` to a comma-separated list of GitHub usernames allowed to access the app.
+
 ## Configuration
 
 | Environment variable | Default | Description |
@@ -371,6 +427,10 @@ plan goals --status active --json | jq 'group_by(.areaId) | map({area: .[0].area
 | `PLANNER_AI_API_KEY` | — | API key (required for AI chat) |
 | `PLANNER_AI_BASE_URL` | `https://api.openai.com/v1` | API base URL (set to `http://localhost:11434/v1` for Ollama) |
 | `PLANNER_AI_MODEL` | `gpt-4o` | Model name (e.g., `mistral` for Ollama) |
+| `PLANNER_GITHUB_CLIENT_ID` | — | GitHub OAuth app client ID (enables web auth) |
+| `PLANNER_GITHUB_CLIENT_SECRET` | — | GitHub OAuth app client secret |
+| `PLANNER_ALLOWED_GITHUB_USERS` | — | Comma-separated GitHub usernames allowed to log in |
+| `PORT` | `3000` | API server port |
 
 The database is a single SQLite file at `$PLANNER_HOME/planner.db`.
 
@@ -407,13 +467,34 @@ Areas
 | Component | Technology |
 |-----------|-----------|
 | Language | TypeScript (strict mode) |
-| Monorepo | pnpm workspaces (`@planner/core`, `@planner/ai`, `@planner/cli`, `@planner/tui`) |
+| Monorepo | pnpm workspaces (6 packages — see below) |
 | Database | SQLite via [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) |
 | ORM | [Drizzle ORM](https://orm.drizzle.team/) |
 | CLI framework | [Commander.js](https://github.com/tj/commander.js/) |
 | TUI framework | [Ink](https://github.com/vadimdemedes/ink) (React for CLI) |
+| API server | [Hono](https://hono.dev/) + @hono/node-server |
+| Web frontend | React + [Vite](https://vite.dev/) + [Tailwind CSS v4](https://tailwindcss.com/) |
+| UI components | [shadcn/ui](https://ui.shadcn.com/) |
+| Server state | [TanStack Query v5](https://tanstack.com/query) |
+| Client state | [Zustand](https://zustand.docs.pmnd.rs/) |
+| Auth | GitHub OAuth + session cookies |
 | IDs | [nanoid](https://github.com/ai/nanoid) (custom 8-char alphanumeric) |
 | Testing | [Vitest](https://vitest.dev/) |
+| Deployment | Docker + [fly.io](https://fly.io/) |
+
+### Packages
+
+```
+packages/
+  core/  → @planner/core  — headless engine (zero UI deps)
+  ai/    → @planner/ai    — AI chat service, tools, prompt (UI-agnostic)
+  cli/   → @planner/cli   — Commander.js CLI
+  tui/   → @planner/tui   — Ink/React terminal UI
+  api/   → @planner/api   — Hono REST API server
+  web/   → @planner/web   — React SPA (Vite + Tailwind v4)
+```
+
+Dependency graph: `cli → tui → ai → core`, `api → ai → core`, `web` (standalone SPA, talks to api over HTTP).
 
 ## Contributing
 

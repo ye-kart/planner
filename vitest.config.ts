@@ -12,6 +12,7 @@ export default defineConfig({
       '@planner/ai': resolve(__dirname, 'packages/ai/src/index.ts'),
       '@planner/cli': resolve(__dirname, 'packages/cli/src/index.ts'),
       '@planner/tui': resolve(__dirname, 'packages/tui/src/index.ts'),
+      '@planner/api': resolve(__dirname, 'packages/api/src/index.ts'),
     },
   },
   test: {

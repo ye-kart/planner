@@ -78,6 +78,13 @@ export const messages = sqliteTable('messages', {
   position: integer('position').notNull(),
 });
 
+export const sessions = sqliteTable('sessions', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull(),
+  expiresAt: text('expires_at').notNull(),
+  createdAt: text('created_at').notNull(),
+});
+
 // Type exports
 export type Area = typeof areas.$inferSelect;
 export type NewArea = typeof areas.$inferInsert;
@@ -95,3 +102,5 @@ export type Conversation = typeof conversations.$inferSelect;
 export type NewConversation = typeof conversations.$inferInsert;
 export type Message = typeof messages.$inferSelect;
 export type NewMessage = typeof messages.$inferInsert;
+export type Session = typeof sessions.$inferSelect;
+export type NewSession = typeof sessions.$inferInsert;

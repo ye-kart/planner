@@ -4,6 +4,8 @@
     { "path": "packages/core" },
     { "path": "packages/ai" },
     { "path": "packages/cli" },
-    { "path": "packages/tui" }
+    { "path": "packages/tui" },
+    { "path": "packages/api" },
+    { "path": "packages/web" }
   ]
 }

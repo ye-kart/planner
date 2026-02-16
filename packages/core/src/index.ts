@@ -14,6 +14,7 @@ export type {
   Completion, NewCompletion,
   Conversation, NewConversation,
   Message, NewMessage,
+  Session, NewSession,
 } from './db/schema.js';
 
 // Repositories
@@ -25,6 +26,7 @@ export { HabitRepository } from './repositories/habit.repository.js';
 export { CompletionRepository } from './repositories/completion.repository.js';
 export { ConversationRepository } from './repositories/conversation.repository.js';
 export { MessageRepository } from './repositories/message.repository.js';
+export { SessionRepository } from './repositories/session.repository.js';
 
 // Services
 export { AreaService, type AreaWithStats, type AreaDetail } from './services/area.service.js';

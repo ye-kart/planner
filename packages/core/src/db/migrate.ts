@@ -72,6 +72,12 @@ const STATEMENTS = [
     position INTEGER NOT NULL
   )`,
   `CREATE INDEX IF NOT EXISTS messages_conversation_idx ON messages(conversation_id, position)`,
+  `CREATE TABLE IF NOT EXISTS sessions (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  )`,
 ];
 
 export function runMigrations(db: DB): void {

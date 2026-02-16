@@ -5,11 +5,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-pnpm build                # tsc → dist/ (all packages, in dependency order)
+pnpm build                # tsc + vite build (all packages, in dependency order)
 pnpm dev                  # tsx packages/cli/src/index.ts (no build step)
+pnpm dev:api              # API server on port 3000
+pnpm dev:web              # Vite dev server on port 5173 (proxies /api → :3000)
+pnpm dev:full             # Both API + Vite concurrently
 pnpm test                 # vitest run (all tests)
 npx vitest run tests/unit              # unit tests only
 npx vitest run tests/integration       # integration tests only
+npx vitest run tests/integration/api   # API integration tests only
 npx vitest run tests/e2e               # E2E tests only
 npx vitest run tests/unit/streak.test.ts  # single file
 pnpm lint                 # tsc --noEmit (all packages)
@@ -18,7 +22,7 @@ pnpm --filter @planner/core build      # build single package
 
 ## Monorepo Structure
 
-pnpm workspace with four packages:
+pnpm workspace with six packages:
 
 ```
 packages/
@@ -26,9 +30,11 @@ packages/
   ai/      → @planner/ai    — AI chat service, tools, prompt (UI-agnostic)
   cli/     → @planner/cli   — Commander.js CLI
   tui/     → @planner/tui   — Ink/React terminal UI
+  api/     → @planner/api   — Hono REST API server
+  web/     → @planner/web   — React SPA (Vite + Tailwind v4)
 ```
 
-Dependency graph: `cli → tui → ai → core`. Core has no workspace dependencies.
+Dependency graph: `cli → tui → ai → core`, `api → ai → core`, `web` (standalone SPA). Core has no workspace dependencies.
 
 **Workspace config:** `pnpm-workspace.yaml` declares `packages/*`. Each package has its own `package.json` and `tsconfig.json` extending `tsconfig.base.json`.
 
@@ -47,15 +53,15 @@ Database (packages/core/src/db/)             → SQLite via better-sqlite3
 
 **Rules:** Commands never import repositories. Services never import Commander or formatters. Repositories never validate.
 
-**DI:** Constructor injection wired in `packages/core/src/container.ts` as lazy singletons. No framework. `getContainer()` for production, `createTestContainer(createTestDb())` for tests. AI extends core container via `createAiContainer()` in `packages/ai/src/container.ts` (adds `ChatService`). TUI delegates to AI container via `createTuiContainer()` in `packages/tui/src/container.ts`.
+**DI:** Constructor injection wired in `packages/core/src/container.ts` as lazy singletons. No framework. `getContainer()` for production, `createTestContainer(createTestDb())` for tests. AI extends core container via `createAiContainer()` in `packages/ai/src/container.ts` (adds `ChatService`). TUI delegates to AI container via `createTuiContainer()` in `packages/tui/src/container.ts`. API extends AI container via `createApiContainer()` in `packages/api/src/container.ts` (adds `sessionRepo`).
 
-**Sync everywhere:** better-sqlite3 is synchronous. No `async/await` in the entire codebase.
+**Sync everywhere:** better-sqlite3 is synchronous. No `async/await` in the core codebase. API route handlers use `async` only for body parsing (`c.req.json()`).
 
 ## Package Responsibilities
 
 ### @planner/core (`packages/core/`)
 - Database: schema, migrations, connection, seed
-- Repositories: area, goal, task, habit, milestone, completion, conversation, message
+- Repositories: area, goal, task, habit, milestone, completion, conversation, message, session
 - Services: area, goal, task, habit, init, status, context, config, export, streak
 - Utils: date, id, guard, output, paths
 - Errors: PlannerError, NotFoundError, ValidationError, NotInitializedError
@@ -75,6 +81,22 @@ Database (packages/core/src/db/)             → SQLite via better-sqlite3
 ### @planner/tui (`packages/tui/`)
 - TUI: app, screens (areas, goals, tasks, habits, dashboard), components, themes, hooks
 - Container: `createTuiContainer()` delegating to `@planner/ai`
+
+### @planner/api (`packages/api/`)
+- Routes: areas, goals, tasks, habits, status, chat (SSE streaming), auth (GitHub OAuth)
+- Middleware: error handler (`app.onError` mapping PlannerError → HTTP status), auth (session cookies)
+- Container: `createApiContainer()` extending AI container with `sessionRepo`
+- Pattern: `createXRoutes(container)` factory returns Hono sub-app
+- Entry: `src/index.ts` exports `createApp(container?)`, `src/server.ts` starts the server
+- In production, serves `packages/web/dist/` as static files with SPA fallback
+
+### @planner/web (`packages/web/`)
+- React SPA built with Vite + Tailwind v4
+- Pages: dashboard, areas, goals, tasks, habits, login
+- Themes: 7 color themes (same hex values as TUI), CSS custom properties, Zustand-persisted
+- State: TanStack Query for server state, Zustand for client state (theme, keyboard mode)
+- Chat: SSE streaming via fetch + ReadableStream
+- Keyboard: vim-style navigation (j/k/Enter/Backspace), screen shortcuts (1-5), action keys (n/e/x/d/s)
 
 ## Key Conventions
 
@@ -106,12 +128,13 @@ All domain errors extend `PlannerError` (`packages/core/src/errors.ts`): `NotFou
 
 ## Testing
 
-Three layers, all use Vitest with globals enabled (no imports needed for describe/it/expect). Tests live at the workspace root in `tests/`. Vitest resolve aliases map `@planner/core`, `@planner/ai`, `@planner/cli`, and `@planner/tui` to source entry points (no build required for testing).
+Three layers, all use Vitest with globals enabled (no imports needed for describe/it/expect). Tests live at the workspace root in `tests/`. Vitest resolve aliases map `@planner/core`, `@planner/ai`, `@planner/cli`, `@planner/tui`, and `@planner/api` to source entry points (no build required for testing).
 
 | Layer | Pattern | Key helper |
 |-------|---------|------------|
 | **Unit** (`tests/unit/`) | Pure functions, no I/O | — |
 | **Integration** (`tests/integration/`) | `createTestDb()` gives fresh in-memory SQLite per test | `tests/integration/helpers/db.ts` |
+| **Integration API** (`tests/integration/api/`) | Hono `app.request()` (no server start), `createTestApp()` per test | `tests/integration/api/helpers.ts` |
 | **E2E** (`tests/e2e/`) | `setupTestDir()` creates isolated temp dir, `runCli()`/`runCliJson()` spawn real processes | `tests/e2e/helpers/cli.ts` |
 
 For context commands in E2E tests, use `runCliParseJson()` (doesn't append `--json` flag).

@@ -9,6 +9,9 @@
   "scripts": {
     "build": "pnpm -r build",
     "dev": "pnpm --filter @planner/cli dev",
+    "dev:api": "pnpm --filter @planner/api dev",
+    "dev:web": "pnpm --filter @planner/web dev",
+    "dev:full": "pnpm --filter @planner/api dev & pnpm --filter @planner/web dev",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "pnpm -r lint"

@@ -1,0 +1,24 @@
+{
+  "name": "@planner/api",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "node --env-file=../../.env --import tsx/esm src/server.ts",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@planner/core": "workspace:*",
+    "@planner/ai": "workspace:*",
+    "hono": "^4.7.4",
+    "@hono/node-server": "^1.14.1"
+  }
+}

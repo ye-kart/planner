@@ -7,6 +7,7 @@ import { HabitRepository } from './repositories/habit.repository.js';
 import { CompletionRepository } from './repositories/completion.repository.js';
 import { ConversationRepository } from './repositories/conversation.repository.js';
 import { MessageRepository } from './repositories/message.repository.js';
+import { SessionRepository } from './repositories/session.repository.js';
 import { InitService } from './services/init.service.js';
 import { AreaService } from './services/area.service.js';
 import { GoalService } from './services/goal.service.js';
@@ -27,6 +28,7 @@ export function createCoreContainer(db: DB) {
   const completionRepo = new CompletionRepository(db);
   const conversationRepo = new ConversationRepository(db);
   const messageRepo = new MessageRepository(db);
+  const sessionRepo = new SessionRepository(db);
 
   // Services
   const initService = new InitService(db);
@@ -52,6 +54,7 @@ export function createCoreContainer(db: DB) {
     // Exposed for consumer packages to extend (e.g., TUI creates ChatService)
     conversationRepo,
     messageRepo,
+    sessionRepo,
   };
 }
 
