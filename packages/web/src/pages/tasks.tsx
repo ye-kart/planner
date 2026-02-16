@@ -111,39 +111,37 @@ export function TasksPage() {
           return (
             <div
               key={task.id}
-              className={`px-4 py-3 rounded flex items-center justify-between transition-colors cursor-pointer ${
+              className={`px-4 py-3 rounded flex items-center gap-3 transition-colors cursor-pointer ${
                 i === selectedIdx ? 'bg-[var(--color-bg-highlight)] border border-[var(--color-border-active)]' : 'hover:bg-[var(--color-bg-highlight)] border border-transparent'
               }`}
               onClick={() => setSelectedIdx(i)}
             >
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (task.status !== 'done') {
-                      tasksApi.markDone(task.id).then(() => {
-                        qc.invalidateQueries({ queryKey: ['tasks'] });
-                        qc.invalidateQueries({ queryKey: ['status'] });
-                      });
-                    }
-                  }}
-                  className={`w-5 h-5 rounded border flex items-center justify-center text-xs ${
-                    task.status === 'done'
-                      ? 'bg-[var(--color-success)] border-[var(--color-success)] text-[var(--color-bg)]'
-                      : 'border-[var(--color-border)] hover:border-[var(--color-border-active)]'
-                  }`}
-                >
-                  {task.status === 'done' ? '\u2713' : null}
-                </button>
-                <span className={`text-sm ${task.status === 'done' ? 'line-through text-[var(--color-text-secondary)]' : 'text-[var(--color-text-primary)]'}`}>
-                  {task.title}
-                </span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (task.status !== 'done') {
+                    tasksApi.markDone(task.id).then(() => {
+                      qc.invalidateQueries({ queryKey: ['tasks'] });
+                      qc.invalidateQueries({ queryKey: ['status'] });
+                    });
+                  }
+                }}
+                className={`w-5 h-5 rounded border flex-shrink-0 flex items-center justify-center text-xs ${
+                  task.status === 'done'
+                    ? 'bg-[var(--color-success)] border-[var(--color-success)] text-[var(--color-bg)]'
+                    : 'border-[var(--color-border)] hover:border-[var(--color-border-active)]'
+                }`}
+              >
+                {task.status === 'done' ? '\u2713' : null}
+              </button>
+              <span className={`flex-1 min-w-0 text-sm ${task.status === 'done' ? 'line-through text-[var(--color-text-secondary)]' : 'text-[var(--color-text-primary)]'}`}>
+                {task.title}
+              </span>
+              <div className="flex items-center gap-2 flex-shrink-0">
                 <StatusBadge status={task.status} />
                 <PriorityBadge priority={task.priority} />
-              </div>
-              <div className="text-xs">
                 {task.dueDate && (
-                  <span className={overdue ? 'text-[var(--color-error)]' : 'text-[var(--color-text-secondary)]'}>
+                  <span className={`text-xs whitespace-nowrap ${overdue ? 'text-[var(--color-error)]' : 'text-[var(--color-text-secondary)]'}`}>
                     {overdue ? 'Overdue: ' : ''}{task.dueDate}
                   </span>
                 )}

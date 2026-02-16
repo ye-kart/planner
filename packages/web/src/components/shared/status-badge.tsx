@@ -9,7 +9,7 @@ const statusStyles: Record<string, { color: string; label: string }> = {
 export function StatusBadge({ status }: { status: string }) {
   const s = statusStyles[status] ?? { color: 'var(--color-text-secondary)', label: status };
   return (
-    <span className="px-2 py-0.5 text-xs rounded font-mono" style={{ color: s.color, borderColor: s.color, border: '1px solid' }}>
+    <span className="px-2 py-0.5 text-xs rounded font-mono whitespace-nowrap" style={{ color: s.color, borderColor: s.color, border: '1px solid' }}>
       {s.label}
     </span>
   );
