@@ -1,4 +1,4 @@
-app = "planner"
+app = "ye-planner"
 primary_region = "iad"
 
 [build]
