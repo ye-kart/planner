@@ -31,7 +31,7 @@ export function Sidebar() {
           onClick={() => setSpaceSwitcherOpen(!spaceSwitcherOpen)}
           className="w-full text-left flex items-center gap-2 hover:text-[var(--color-text-accent)] transition-colors"
         >
-          <span className="text-lg">{currentSpace?.icon ?? '🚀'}</span>
+          <span className="text-lg">{currentSpace?.icon ?? '📁'}</span>
           <span className="text-lg font-bold text-[var(--color-text-accent)] truncate flex-1">
             {currentSpace?.name ?? 'Planner'}
           </span>
