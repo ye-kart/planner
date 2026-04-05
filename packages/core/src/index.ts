@@ -16,6 +16,7 @@ export type {
   Conversation, NewConversation,
   Message, NewMessage,
   Session, NewSession,
+  AllowedUser, NewAllowedUser,
 } from './db/schema.js';
 
 // Repositories
@@ -29,6 +30,7 @@ export { CompletionRepository } from './repositories/completion.repository.js';
 export { ConversationRepository } from './repositories/conversation.repository.js';
 export { MessageRepository } from './repositories/message.repository.js';
 export { SessionRepository } from './repositories/session.repository.js';
+export { AllowedUserRepository } from './repositories/allowed-user.repository.js';
 
 // Services
 export { SpaceService } from './services/space.service.js';

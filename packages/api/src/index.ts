@@ -13,6 +13,7 @@ import { createStatusRoutes } from './routes/status.routes.js';
 import { createChatRoutes } from './routes/chat.routes.js';
 import { createAuthRoutes } from './routes/auth.routes.js';
 import { createSpacesRoutes } from './routes/spaces.routes.js';
+import { createAdminRoutes } from './routes/admin.routes.js';
 
 interface CreateAppOptions {
   container?: ApiContainer;
@@ -52,6 +53,9 @@ export function createApp(options?: CreateAppOptions) {
 
   // --- Space CRUD (unscoped) ---
   app.route('/api/spaces', createSpacesRoutes(db));
+
+  // --- Admin routes (requires admin role) ---
+  app.route('/api/admin', createAdminRoutes(authContainer));
 
   // --- Space-scoped routes ---
   const spaceMiddleware = createSpaceMiddleware(db);

@@ -93,6 +93,13 @@ const STATEMENTS = [
     expires_at TEXT NOT NULL,
     created_at TEXT NOT NULL
   )`,
+  `CREATE TABLE IF NOT EXISTS allowed_users (
+    id TEXT PRIMARY KEY,
+    provider TEXT NOT NULL DEFAULT 'github',
+    username TEXT NOT NULL,
+    is_admin INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL
+  )`,
 ];
 
 // ALTER statements for migrating existing databases that lack the space_id column.
@@ -121,6 +128,32 @@ export function runMigrations(db: DB): void {
 
   // Backfill: create a default space and assign orphaned rows
   backfillDefaultSpace(db);
+
+  // Seed allowed_users from env vars if table is empty
+  seedAllowedUsersFromEnv(db);
+}
+
+function seedAllowedUsersFromEnv(db: DB): void {
+  const existing = db.all(sql`SELECT id FROM allowed_users LIMIT 1`);
+  if (existing.length > 0) return; // Already seeded
+
+  const now = new Date().toISOString();
+
+  // Seed GitHub users
+  const githubUsers = (process.env.PLANNER_ALLOWED_GITHUB_USERS ?? '').split(',').map(u => u.trim()).filter(Boolean);
+  for (let i = 0; i < githubUsers.length; i++) {
+    const id = generateId();
+    const isAdmin = i === 0 ? 1 : 0; // First user is admin
+    db.run(sql`INSERT INTO allowed_users (id, provider, username, is_admin, created_at) VALUES (${id}, 'github', ${githubUsers[i]}, ${isAdmin}, ${now})`);
+  }
+
+  // Seed Google emails
+  const googleEmails = (process.env.PLANNER_ALLOWED_GOOGLE_EMAILS ?? '').split(',').map(e => e.trim()).filter(Boolean);
+  for (const email of googleEmails) {
+    const id = generateId();
+    const isAdmin = githubUsers.length === 0 ? 1 : 0; // Admin if no GitHub users were added
+    db.run(sql`INSERT INTO allowed_users (id, provider, username, is_admin, created_at) VALUES (${id}, 'google', ${email}, ${isAdmin}, ${now})`);
+  }
 }
 
 function backfillDefaultSpace(db: DB): void {

@@ -99,6 +99,14 @@ export const sessions = sqliteTable('sessions', {
   createdAt: text('created_at').notNull(),
 });
 
+export const allowedUsers = sqliteTable('allowed_users', {
+  id: text('id').primaryKey(),
+  provider: text('provider', { enum: ['github', 'google'] }).notNull(),
+  username: text('username').notNull(),
+  isAdmin: integer('is_admin', { mode: 'boolean' }).notNull().default(false),
+  createdAt: text('created_at').notNull(),
+});
+
 // Type exports
 export type Space = typeof spaces.$inferSelect;
 export type NewSpace = typeof spaces.$inferInsert;
@@ -120,3 +128,5 @@ export type Message = typeof messages.$inferSelect;
 export type NewMessage = typeof messages.$inferInsert;
 export type Session = typeof sessions.$inferSelect;
 export type NewSession = typeof sessions.$inferInsert;
+export type AllowedUser = typeof allowedUsers.$inferSelect;
+export type NewAllowedUser = typeof allowedUsers.$inferInsert;

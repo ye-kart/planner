@@ -10,6 +10,7 @@ import { TasksPage } from './pages/tasks';
 import { HabitsPage } from './pages/habits';
 import { LoginPage } from './pages/login';
 import { SpacesPage } from './pages/spaces';
+import { AdminPage } from './pages/admin';
 import { useKeyboard } from './hooks/use-keyboard';
 
 const queryClient = new QueryClient({
@@ -30,6 +31,7 @@ export function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/spaces/manage" element={<SpacesPage />} />
+          <Route path="/admin" element={<AdminPage />} />
           <Route path="/" element={<SpaceRedirect />} />
           <Route path="/spaces/:spaceId" element={<SpaceProvider><KeyboardProvider><AppLayout /></KeyboardProvider></SpaceProvider>}>
             <Route index element={<DashboardPage />} />

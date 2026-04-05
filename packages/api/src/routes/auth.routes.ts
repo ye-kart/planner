@@ -4,15 +4,13 @@ import type { ApiContainer } from '../container.js';
 
 export function createAuthRoutes(container: ApiContainer): Hono {
   const app = new Hono();
-  const { sessionRepo } = container;
+  const { sessionRepo, allowedUserRepo } = container;
 
   const githubClientId = process.env.PLANNER_GITHUB_CLIENT_ID;
   const githubClientSecret = process.env.PLANNER_GITHUB_CLIENT_SECRET;
-  const allowedUsers = (process.env.PLANNER_ALLOWED_GITHUB_USERS ?? '').split(',').map(u => u.trim()).filter(Boolean);
 
   const googleClientId = process.env.PLANNER_GOOGLE_CLIENT_ID;
   const googleClientSecret = process.env.PLANNER_GOOGLE_CLIENT_SECRET;
-  const allowedEmails = (process.env.PLANNER_ALLOWED_GOOGLE_EMAILS ?? '').split(',').map(e => e.trim()).filter(Boolean);
 
   // --- GitHub OAuth ---
 
@@ -53,8 +51,8 @@ export function createAuthRoutes(container: ApiContainer): Hono {
       return c.json({ error: 'Failed to get user info' }, 400);
     }
 
-    // Check allowlist
-    if (allowedUsers.length > 0 && !allowedUsers.includes(user.login)) {
+    // Check allowlist (database)
+    if (!allowedUserRepo.isAllowed('github', user.login)) {
       return c.json({ error: 'User not authorized' }, 403);
     }
 
@@ -119,8 +117,8 @@ export function createAuthRoutes(container: ApiContainer): Hono {
       return c.json({ error: 'Failed to get user info' }, 400);
     }
 
-    // Check allowlist
-    if (allowedEmails.length > 0 && !allowedEmails.includes(user.email)) {
+    // Check allowlist (database)
+    if (!allowedUserRepo.isAllowed('google', user.email)) {
       return c.json({ error: 'User not authorized' }, 403);
     }
 
@@ -156,7 +154,9 @@ export function createAuthRoutes(container: ApiContainer): Hono {
     if (!session || new Date(session.expiresAt) < new Date()) {
       return c.json({ authenticated: false });
     }
-    return c.json({ authenticated: true, userId: session.userId });
+    const [provider, username] = session.userId.split(':');
+    const isAdmin = provider && username ? allowedUserRepo.isAdmin(provider, username) : false;
+    return c.json({ authenticated: true, userId: session.userId, isAdmin });
   });
 
   return app;

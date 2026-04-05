@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useThemeStore } from '../../stores/theme.store';
 import { useCurrentSpace } from '../../contexts/space-context';
 import { useSpaces } from '../../hooks/use-api';
+import { api } from '../../api/client';
 
 const screens = [
   { key: '1', path: '', label: 'Dashboard', icon: '~' },
@@ -25,6 +27,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { data: spaces } = useSpaces();
   const [spaceSwitcherOpen, setSpaceSwitcherOpen] = useState(false);
 
+  const { data: authMe } = useQuery({ queryKey: ['auth', 'me'], queryFn: () => api.get<{ isAdmin?: boolean }>('/api/auth/me') });
   const currentSpace = spaces?.find(s => s.id === spaceId);
   const basePath = `/spaces/${spaceId}`;
 
@@ -102,7 +105,16 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         })}
       </nav>
 
-      <div className="p-4 border-t border-[var(--color-border)]">
+      <div className="p-4 border-t border-[var(--color-border)] space-y-2">
+        {authMe?.isAdmin && (
+          <button
+            onClick={() => navigate('/admin')}
+            className="w-full text-left text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-accent)] transition-colors"
+          >
+            <span className="font-mono mr-2">⚙</span>
+            Admin
+          </button>
+        )}
         <button
           onClick={cycleTheme}
           className="w-full text-left text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-accent)] transition-colors"
