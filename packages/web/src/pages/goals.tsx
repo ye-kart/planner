@@ -88,11 +88,11 @@ export function GoalsPage() {
   if (detailId && detail) {
     return (
       <div className="space-y-6 max-w-4xl">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 md:gap-3">
           <button onClick={() => setDetailId(null)} className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-accent)]">
             &larr; Back
           </button>
-          <h1 className="text-2xl font-bold text-[var(--color-text-accent)]">{detail.title}</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-[var(--color-text-accent)]">{detail.title}</h1>
           <StatusBadge status={detail.status} />
           <PriorityBadge priority={detail.priority} />
         </div>
@@ -196,7 +196,7 @@ export function GoalsPage() {
               <StatusBadge status={goal.status} />
               <PriorityBadge priority={goal.priority} />
             </div>
-            <ProgressBar value={goal.progress} className="w-48" />
+            <ProgressBar value={goal.progress} className="w-full max-w-48" />
           </button>
         ))}
         {goals?.length === 0 && <p className="text-sm text-[var(--color-text-secondary)]">No goals matching filter</p>}

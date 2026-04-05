@@ -12,7 +12,12 @@ const screens = [
   { key: '5', path: '/habits', label: 'Habits', icon: '+' },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { themeName, cycleTheme } = useThemeStore();
@@ -23,8 +28,8 @@ export function Sidebar() {
   const currentSpace = spaces?.find(s => s.id === spaceId);
   const basePath = `/spaces/${spaceId}`;
 
-  return (
-    <aside className="w-48 shrink-0 flex flex-col border-r border-[var(--color-border)] bg-[var(--color-bg-panel)]">
+  const sidebarContent = (
+    <aside className="w-64 md:w-48 shrink-0 flex flex-col border-r border-[var(--color-border)] bg-[var(--color-bg-panel)] h-full">
       {/* Space Switcher */}
       <div className="p-4 border-b border-[var(--color-border)]">
         <button
@@ -46,6 +51,7 @@ export function Sidebar() {
                 onClick={() => {
                   navigate(`/spaces/${space.id}`);
                   setSpaceSwitcherOpen(false);
+                  onClose();
                 }}
                 className={`w-full text-left px-2 py-1 rounded text-sm flex items-center gap-2 transition-colors ${
                   space.id === spaceId
@@ -61,6 +67,7 @@ export function Sidebar() {
               onClick={() => {
                 navigate('/spaces/manage');
                 setSpaceSwitcherOpen(false);
+                onClose();
               }}
               className="w-full text-left px-2 py-1 rounded text-xs flex items-center gap-2 mt-1 border-t border-[var(--color-border)] pt-2 text-[var(--color-text-secondary)] hover:text-[var(--color-text-accent)]"
             >
@@ -80,7 +87,7 @@ export function Sidebar() {
           return (
             <button
               key={s.path}
-              onClick={() => navigate(fullPath)}
+              onClick={() => { navigate(fullPath); onClose(); }}
               className={`w-full text-left px-4 py-2 flex items-center gap-3 text-sm transition-colors ${
                 active
                   ? 'bg-[var(--color-bg-highlight)] text-[var(--color-tab-active)] border-r-2 border-[var(--color-tab-active)]'
@@ -105,5 +112,24 @@ export function Sidebar() {
         </button>
       </div>
     </aside>
+  );
+
+  return (
+    <>
+      {/* Desktop: inline sidebar */}
+      <div className="hidden md:flex">
+        {sidebarContent}
+      </div>
+
+      {/* Mobile: overlay sidebar */}
+      {isOpen && (
+        <div className="fixed inset-0 z-40 flex md:hidden">
+          <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+          <div className="relative z-50">
+            {sidebarContent}
+          </div>
+        </div>
+      )}
+    </>
   );
 }

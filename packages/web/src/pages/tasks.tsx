@@ -174,7 +174,7 @@ export function TasksPage() {
               <span className={`flex-1 min-w-0 text-sm ${task.status === 'done' ? 'line-through text-[var(--color-text-secondary)]' : 'text-[var(--color-text-primary)]'}`}>
                 {task.title}
               </span>
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
                 <StatusBadge status={task.status} />
                 <PriorityBadge priority={task.priority} />
                 {task.dueDate && (

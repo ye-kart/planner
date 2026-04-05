@@ -78,7 +78,7 @@ export function AreasPage() {
         </div>
         {detail.description && <p className="text-sm text-[var(--color-text-secondary)]">{detail.description}</p>}
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Panel title={`Goals (${detail.goals.length})`}>
             {detail.goals.map((g) => (
               <div key={g.id} className="py-1 text-sm text-[var(--color-text-primary)]">{g.title}</div>
@@ -153,19 +153,19 @@ export function AreasPage() {
             key={area.id}
             onClick={() => setDetailId(area.id)}
             data-selected={i === selectedIdx ? '' : undefined}
-            className={`w-full text-left px-4 py-3 rounded flex items-center justify-between transition-colors ${
+            className={`w-full text-left px-4 py-3 rounded flex flex-col md:flex-row md:items-center justify-between gap-1 transition-colors ${
               i === selectedIdx
                 ? 'bg-[var(--color-bg-highlight)] border border-[var(--color-border-active)]'
                 : 'hover:bg-[var(--color-bg-highlight)] border border-transparent'
             }`}
           >
-            <div>
+            <div className="min-w-0">
               <span className="text-sm font-medium text-[var(--color-text-primary)]">{area.name}</span>
               {area.description && (
-                <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">{area.description}</p>
+                <p className="text-xs text-[var(--color-text-secondary)] mt-0.5 truncate">{area.description}</p>
               )}
             </div>
-            <div className="flex gap-4 text-xs text-[var(--color-text-secondary)]">
+            <div className="flex gap-3 md:gap-4 text-xs text-[var(--color-text-secondary)] shrink-0">
               <span>{area.goalCount} goals</span>
               <span>{area.taskCount} tasks</span>
               <span>{area.habitCount} habits</span>

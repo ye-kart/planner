@@ -53,7 +53,7 @@ export function KeyboardHintBar() {
   const hints = [...globalHints, ...(screenHints[location.pathname] ?? [])];
 
   return (
-    <div className="h-8 px-4 flex items-center gap-4 border-t border-[var(--color-border)] bg-[var(--color-bg-panel)] text-xs text-[var(--color-text-secondary)]">
+    <div className="hidden md:flex h-8 px-4 items-center gap-4 border-t border-[var(--color-border)] bg-[var(--color-bg-panel)] text-xs text-[var(--color-text-secondary)]">
       {hints.map((h) => (
         <span key={h.key} className="flex items-center gap-1">
           <kbd className="px-1 rounded bg-[var(--color-bg-highlight)] text-[var(--color-text-accent)] font-mono">

@@ -142,7 +142,7 @@ export function HabitsPage() {
             <div
               key={habit.id}
               data-selected={i === selectedIdx ? '' : undefined}
-              className={`px-4 py-3 rounded flex items-center justify-between transition-colors cursor-pointer ${
+              className={`px-4 py-3 rounded flex items-center justify-between gap-2 transition-colors cursor-pointer ${
                 i === selectedIdx ? 'bg-[var(--color-bg-highlight)] border border-[var(--color-border-active)]' : 'hover:bg-[var(--color-bg-highlight)] border border-transparent'
               }`}
               onClick={() => {
@@ -156,9 +156,9 @@ export function HabitsPage() {
                 }
               }}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
                 {isToday && (
-                  <div className={`w-5 h-5 rounded border flex items-center justify-center text-xs ${
+                  <div className={`w-5 h-5 rounded border flex-shrink-0 flex items-center justify-center text-xs ${
                     isDone
                       ? 'bg-[var(--color-success)] border-[var(--color-success)] text-[var(--color-bg)]'
                       : 'border-[var(--color-border)]'
@@ -166,10 +166,10 @@ export function HabitsPage() {
                     {isDone ? '\u2713' : null}
                   </div>
                 )}
-                <span className={`text-sm ${isDone ? 'line-through text-[var(--color-text-secondary)]' : 'text-[var(--color-text-primary)]'}`}>
+                <span className={`text-sm truncate ${isDone ? 'line-through text-[var(--color-text-secondary)]' : 'text-[var(--color-text-primary)]'}`}>
                   {habit.title}
                 </span>
-                <span className="text-xs text-[var(--color-text-secondary)] font-mono">{habit.frequency}</span>
+                <span className="text-xs text-[var(--color-text-secondary)] font-mono shrink-0">{habit.frequency}</span>
               </div>
               <StreakDisplay current={habit.currentStreak} best={habit.bestStreak} />
             </div>

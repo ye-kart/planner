@@ -92,7 +92,7 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
   const displayMessages = messages.filter((m) => m.role !== 'system');
 
   return (
-    <aside className="w-96 shrink-0 flex flex-col border-l border-[var(--color-border)] bg-[var(--color-bg-panel)]">
+    <aside className="fixed inset-0 z-40 md:relative md:inset-auto md:z-auto w-full md:w-96 shrink-0 flex flex-col border-l border-[var(--color-border)] bg-[var(--color-bg-panel)]">
       <div className="p-3 border-b border-[var(--color-border)] flex items-center justify-between">
         <h2 className="text-sm font-semibold text-[var(--color-text-accent)]">AI Chat</h2>
         <div className="flex gap-2">

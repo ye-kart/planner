@@ -72,7 +72,7 @@ export function DashboardPage() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         <Panel>
           <p className="text-2xl font-bold text-[var(--color-accent-1)]">{summary.tasksDue}</p>
           <p className="text-xs text-[var(--color-text-secondary)]">Tasks Due</p>
@@ -100,7 +100,7 @@ export function DashboardPage() {
         </Panel>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
         {/* Tasks due today */}
         <Panel title={`Tasks Due Today (${tasksDueToday.length})`}>
           {tasksDueToday.length === 0 ? (
