@@ -57,9 +57,11 @@ function App({ container: initialContainer, initialTheme, initialSpaceId, db }: 
 
     // Rebuild container with new spaceId
     const core = createCoreContainer(db, spaceId);
+    const selectedSpace = spaces.find(s => s.id === spaceId);
     const chatService = new ChatService(
       core.conversationRepo, core.messageRepo, core.configService,
       core.areaService, core.goalService, core.taskService, core.habitService, core.contextService,
+      selectedSpace?.name ?? 'Default', core.spaceService,
     );
     const newContainer: Container = { ...core, chatService };
 

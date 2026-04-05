@@ -1,6 +1,6 @@
 import { readFileSync, existsSync } from 'fs';
 import { resolve, extname } from 'path';
-import type { AreaService, GoalService, TaskService, HabitService } from '@planner/core';
+import type { AreaService, GoalService, TaskService, HabitService, SpaceService } from '@planner/core';
 
 const ALLOWED_EXTENSIONS = new Set(['.md', '.txt', '.json', '.csv', '.yaml', '.yml']);
 const MAX_CONTENT_LENGTH = 50_000;
@@ -357,6 +357,15 @@ export function getToolDefinitions(): ToolDefinition[] {
         },
       },
     },
+    // --- Spaces ---
+    {
+      type: 'function',
+      function: {
+        name: 'list_spaces',
+        description: 'List all available spaces. The user can switch between spaces to manage separate sets of areas, goals, tasks, and habits.',
+        parameters: { type: 'object', properties: {} },
+      },
+    },
     // --- Document ---
     {
       type: 'function',
@@ -386,6 +395,7 @@ export interface ToolServices {
   goalService: GoalService;
   taskService: TaskService;
   habitService: HabitService;
+  spaceService: SpaceService;
 }
 
 export function executeTool(name: string, argsJson: string, services: ToolServices): ToolResult {
@@ -395,6 +405,11 @@ export function executeTool(name: string, argsJson: string, services: ToolServic
     // Utility tools (no service dependencies)
     if (name === 'read_document') {
       return readDocument(args.path);
+    }
+
+    if (name === 'list_spaces') {
+      const spaces = services.spaceService.list();
+      return { success: true, message: `Found ${spaces.length} spaces`, data: spaces.map(s => ({ id: s.id, name: s.name, icon: s.icon ?? '📁', description: s.description })) };
     }
 
     const { areaService, goalService, taskService, habitService } = services;

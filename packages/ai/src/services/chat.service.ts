@@ -4,6 +4,7 @@ import {
   ConversationRepository, MessageRepository,
   ConfigService, ContextService,
   type AreaService, type GoalService, type TaskService, type HabitService,
+  type SpaceService,
   generateId, ChatError,
   type Conversation, type Message,
 } from '@planner/core';
@@ -20,6 +21,7 @@ export interface StreamCallbacks {
 
 export class ChatService {
   private toolServices: ToolServices;
+  private spaceName: string;
 
   constructor(
     private conversationRepo: ConversationRepository,
@@ -30,12 +32,16 @@ export class ChatService {
     private taskService: TaskService,
     private habitService: HabitService,
     private contextService: ContextService,
+    spaceName: string,
+    spaceService: SpaceService,
   ) {
+    this.spaceName = spaceName;
     this.toolServices = {
       areaService,
       goalService,
       taskService,
       habitService,
+      spaceService,
     };
   }
 
@@ -100,7 +106,7 @@ export class ChatService {
     this.conversationRepo.update(conversationId, { updatedAt: new Date().toISOString() });
 
     // Build message array
-    const systemPrompt = buildSystemPrompt(currentScreen, this.contextService);
+    const systemPrompt = buildSystemPrompt(currentScreen, this.contextService, this.spaceName);
     const storedMessages = this.messageRepo.findByConversationId(conversationId);
 
     const apiMessages: ChatCompletionMessageParam[] = [

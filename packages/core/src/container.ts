@@ -49,6 +49,7 @@ export function createCoreContainer(db: DB, spaceId: string) {
   const exportService = new ExportService(contextService);
 
   return {
+    spaceId,
     spaceService,
     initService,
     areaService,

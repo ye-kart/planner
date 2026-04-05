@@ -1,6 +1,6 @@
 import { type ContextService, today } from '@planner/core';
 
-export function buildSystemPrompt(currentScreen: string, contextService: ContextService): string {
+export function buildSystemPrompt(currentScreen: string, contextService: ContextService, spaceName?: string): string {
   const todayDate = today();
   const todaySummary = JSON.stringify(contextService.today(todayDate), null, 2);
   const allData = JSON.stringify(contextService.all(), null, 2);
@@ -10,6 +10,8 @@ export function buildSystemPrompt(currentScreen: string, contextService: Context
 ## Current Context
 - Today's date: ${todayDate}
 - User is viewing: ${currentScreen} screen
+- Active space: "${spaceName ?? 'Default'}"
+  All data shown below and all tool operations are scoped to this space. Items in other spaces are not visible here.
 
 ## Your Capabilities
 You can read and modify the user's planning data using tools:
