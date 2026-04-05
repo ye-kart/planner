@@ -20,7 +20,7 @@ export function createAuthRoutes(container: ApiContainer): Hono {
     if (!githubClientId) {
       return c.json({ error: 'GitHub OAuth not configured' }, 503);
     }
-    const redirectUri = new URL('/api/auth/github/callback', c.req.url).toString();
+    const redirectUri = new URL('/api/auth/github/callback', getBaseUrl(c)).toString();
     const url = `https://github.com/login/oauth/authorize?client_id=${githubClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=read:user`;
     return c.redirect(url);
   });
@@ -60,7 +60,8 @@ export function createAuthRoutes(container: ApiContainer): Hono {
 
     // Create session
     const session = createSession(sessionRepo, `github:${user.login}`);
-    c.header('Set-Cookie', `session=${session.id}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${30 * 24 * 60 * 60}`);
+    const secure = c.req.header('x-forwarded-proto') === 'https' ? '; Secure' : '';
+    c.header('Set-Cookie', `session=${session.id}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${30 * 24 * 60 * 60}${secure}`);
     return c.redirect('/');
   });
 
@@ -70,7 +71,7 @@ export function createAuthRoutes(container: ApiContainer): Hono {
     if (!googleClientId) {
       return c.json({ error: 'Google OAuth not configured' }, 503);
     }
-    const redirectUri = new URL('/api/auth/google/callback', c.req.url).toString();
+    const redirectUri = new URL('/api/auth/google/callback', getBaseUrl(c)).toString();
     const params = new URLSearchParams({
       client_id: googleClientId,
       redirect_uri: redirectUri,
@@ -88,7 +89,7 @@ export function createAuthRoutes(container: ApiContainer): Hono {
       return c.json({ error: 'Invalid OAuth callback' }, 400);
     }
 
-    const redirectUri = new URL('/api/auth/google/callback', c.req.url).toString();
+    const redirectUri = new URL('/api/auth/google/callback', getBaseUrl(c)).toString();
 
     // Exchange code for tokens
     const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
@@ -125,7 +126,8 @@ export function createAuthRoutes(container: ApiContainer): Hono {
 
     // Create session
     const session = createSession(sessionRepo, `google:${user.email}`);
-    c.header('Set-Cookie', `session=${session.id}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${30 * 24 * 60 * 60}`);
+    const secure = c.req.header('x-forwarded-proto') === 'https' ? '; Secure' : '';
+    c.header('Set-Cookie', `session=${session.id}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${30 * 24 * 60 * 60}${secure}`);
     return c.redirect('/');
   });
 
@@ -167,6 +169,12 @@ function createSession(sessionRepo: ApiContainer['sessionRepo'], userId: string)
     expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     createdAt: new Date().toISOString(),
   });
+}
+
+function getBaseUrl(c: { req: { header: (name: string) => string | undefined; url: string } }): string {
+  const proto = c.req.header('x-forwarded-proto') || 'http';
+  const host = c.req.header('host') || 'localhost';
+  return `${proto}://${host}`;
 }
 
 function getCookie(c: { req: { header: (name: string) => string | undefined } }, name: string): string | undefined {
