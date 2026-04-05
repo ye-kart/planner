@@ -25,12 +25,12 @@ export function createAiContainer(): AiContainer {
 
 export function createAiContainerWith(db: DB, spaceId: string): AiContainer {
   const core = createCoreContainer(db, spaceId);
-  const space = core.spaceService.show(spaceId);
+  const space = core.spaceService.list().find(s => s.id === spaceId);
 
   const chatService = new ChatService(
     core.conversationRepo, core.messageRepo, core.configService,
     core.areaService, core.goalService, core.taskService, core.habitService, core.contextService,
-    space.name, core.spaceService,
+    space?.name ?? 'Default', core.spaceService,
   );
 
   return { ...core, chatService };
