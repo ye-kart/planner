@@ -9,14 +9,16 @@ interface UseGlobalKeysOptions {
   prevScreen: () => void;
   openSearch: () => void;
   openChat: () => void;
+  openSpacePicker: () => void;
   searchActive: boolean;
   inputActive: boolean;
   chatOpen: boolean;
+  spacePickerOpen: boolean;
 }
 
 export function useGlobalKeys(opts: UseGlobalKeysOptions): void {
   useInput((input, key) => {
-    if (opts.searchActive || opts.inputActive || opts.chatOpen) return;
+    if (opts.searchActive || opts.inputActive || opts.chatOpen || opts.spacePickerOpen) return;
 
     if (input === 'q') {
       opts.onQuit();
@@ -32,6 +34,10 @@ export function useGlobalKeys(opts: UseGlobalKeysOptions): void {
     }
     if (input === 'c') {
       opts.openChat();
+      return;
+    }
+    if (input === 's') {
+      opts.openSpacePicker();
       return;
     }
     if (key.tab && key.shift) {

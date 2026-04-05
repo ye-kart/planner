@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { Box, Text, useInput, useStdout } from 'ink';
 import { TopBar } from './top-bar.js';
 import { SearchOverlay } from './search-overlay.js';
+import { SpacePicker } from './space-picker.js';
 import { ChatPanel } from './chat-panel.js';
 import { Screen } from '../types.js';
 import { useRefresh } from '../hooks/use-refresh.js';
@@ -12,6 +13,7 @@ import { GoalsScreen } from '../screens/goals.js';
 import { TasksScreen } from '../screens/tasks.js';
 import { HabitsScreen } from '../screens/habits.js';
 import type { ChatService } from '@planner/ai';
+import type { Space } from '@planner/core';
 
 interface LayoutProps {
   screen: Screen;
@@ -22,9 +24,16 @@ interface LayoutProps {
   onChatClose: () => void;
   chatService: ChatService;
   chatConfigured: boolean;
+  spaceName?: string;
+  spaceIcon?: string | null;
+  spaces?: Space[];
+  currentSpaceId?: string;
+  spacePickerOpen: boolean;
+  onSpaceSelect: (spaceId: string) => void;
+  onSpacePickerClose: () => void;
 }
 
-export function Layout({ screen, searchActive, onSearchClose, setInputActive, chatOpen, onChatClose, chatService, chatConfigured }: LayoutProps) {
+export function Layout({ screen, searchActive, onSearchClose, setInputActive, chatOpen, onChatClose, chatService, chatConfigured, spaceName, spaceIcon, spaces, currentSpaceId, spacePickerOpen, onSpaceSelect, onSpacePickerClose }: LayoutProps) {
   const { colors } = useTheme();
   const [refreshKey, refresh] = useRefresh();
   const [searchQuery, setSearchQuery] = useState('');
@@ -47,7 +56,7 @@ export function Layout({ screen, searchActive, onSearchClose, setInputActive, ch
 
   // Allow Escape to clear search when not in search overlay
   useInput((_input, key) => {
-    if (!searchActive && !chatOpen && key.escape && searchQuery) {
+    if (!searchActive && !chatOpen && !spacePickerOpen && key.escape && searchQuery) {
       setSearchQuery('');
     }
   });
@@ -63,7 +72,16 @@ export function Layout({ screen, searchActive, onSearchClose, setInputActive, ch
 
   return (
     <Box flexDirection="column" height={termHeight}>
-      <TopBar screen={screen} chatConfigured={chatConfigured} />
+      <TopBar screen={screen} chatConfigured={chatConfigured} spaceName={spaceName} spaceIcon={spaceIcon} />
+
+      {spacePickerOpen && spaces && currentSpaceId && (
+        <SpacePicker
+          spaces={spaces}
+          currentSpaceId={currentSpaceId}
+          onSelect={onSpaceSelect}
+          onCancel={onSpacePickerClose}
+        />
+      )}
 
       {searchActive && (
         <SearchOverlay

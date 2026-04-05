@@ -7,9 +7,11 @@ import { useAnimation } from '../hooks/use-animation.js';
 interface TopBarProps {
   screen: Screen;
   chatConfigured?: boolean;
+  spaceName?: string;
+  spaceIcon?: string | null;
 }
 
-export function TopBar({ screen, chatConfigured }: TopBarProps) {
+export function TopBar({ screen, chatConfigured, spaceName, spaceIcon }: TopBarProps) {
   const { colors, themeName } = useTheme();
   const frame = useAnimation(500);
   const flash = frame % 2 === 0;
@@ -21,7 +23,7 @@ export function TopBar({ screen, chatConfigured }: TopBarProps) {
     year: 'numeric',
   });
 
-  const hints = 't:theme /:search' + (chatConfigured ? ' c:chat' : '') + ' q:quit';
+  const hints = 's:space t:theme /:search' + (chatConfigured ? ' c:chat' : '') + ' q:quit';
 
   return (
     <Box flexDirection="column">
@@ -29,6 +31,12 @@ export function TopBar({ screen, chatConfigured }: TopBarProps) {
         <Box gap={1}>
           <Text color={colors.accent1} bold>{flash ? '◆' : '◇'}</Text>
           <Text color={colors.textPrimary} bold>PLANNER</Text>
+          {spaceName && (
+            <>
+              <Text color={colors.textSecondary}>│</Text>
+              <Text color={colors.accent2}>{spaceIcon ?? '📁'} {spaceName}</Text>
+            </>
+          )}
         </Box>
         <Box gap={1}>
           <Text color={colors.textSecondary}>{dateStr}</Text>
