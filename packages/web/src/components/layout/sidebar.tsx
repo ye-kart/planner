@@ -57,6 +57,16 @@ export function Sidebar() {
                 <span className="truncate">{space.name}</span>
               </button>
             ))}
+            <button
+              onClick={() => {
+                navigate('/spaces/manage');
+                setSpaceSwitcherOpen(false);
+              }}
+              className="w-full text-left px-2 py-1 rounded text-xs flex items-center gap-2 mt-1 border-t border-[var(--color-border)] pt-2 text-[var(--color-text-secondary)] hover:text-[var(--color-text-accent)]"
+            >
+              <span>⚙</span>
+              <span>Manage Spaces</span>
+            </button>
           </div>
         )}
       </div>
