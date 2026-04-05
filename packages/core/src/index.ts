@@ -6,6 +6,7 @@ export { getDb, createMemoryDb, resetDb, type DB } from './db/connection.js';
 export { runMigrations } from './db/migrate.js';
 export { seedDefaultAreas } from './db/seed.js';
 export type {
+  Space, NewSpace,
   Area, NewArea,
   Goal, NewGoal,
   Milestone, NewMilestone,
@@ -18,6 +19,7 @@ export type {
 } from './db/schema.js';
 
 // Repositories
+export { SpaceRepository } from './repositories/space.repository.js';
 export { AreaRepository } from './repositories/area.repository.js';
 export { GoalRepository } from './repositories/goal.repository.js';
 export { MilestoneRepository } from './repositories/milestone.repository.js';
@@ -29,6 +31,7 @@ export { MessageRepository } from './repositories/message.repository.js';
 export { SessionRepository } from './repositories/session.repository.js';
 
 // Services
+export { SpaceService } from './services/space.service.js';
 export { AreaService, type AreaWithStats, type AreaDetail } from './services/area.service.js';
 export { GoalService, type GoalDetail } from './services/goal.service.js';
 export { TaskService, type TaskWithOverdue } from './services/task.service.js';
@@ -48,4 +51,4 @@ export { generateId } from './utils/id.js';
 export { today, toISODate, parseDate, dayOfWeek, isoWeek, addDays, diffDays, formatDateHuman } from './utils/date.js';
 export { formatOutput } from './utils/output.js';
 export { ensureInitialized } from './utils/guard.js';
-export { getPlannerDir, getDbPath } from './utils/paths.js';
+export { getPlannerDir, getDbPath, getConfigPath } from './utils/paths.js';

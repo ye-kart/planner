@@ -1,7 +1,17 @@
 import { sqliteTable, text, integer, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
+export const spaces = sqliteTable('spaces', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  description: text('description'),
+  icon: text('icon'),
+  position: integer('position').notNull().default(0),
+  createdAt: text('created_at').notNull(),
+});
+
 export const areas = sqliteTable('areas', {
   id: text('id').primaryKey(),
+  spaceId: text('space_id').notNull().references(() => spaces.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   description: text('description'),
   position: integer('position').notNull().default(0),
@@ -9,6 +19,7 @@ export const areas = sqliteTable('areas', {
 
 export const goals = sqliteTable('goals', {
   id: text('id').primaryKey(),
+  spaceId: text('space_id').notNull().references(() => spaces.id, { onDelete: 'cascade' }),
   areaId: text('area_id').references(() => areas.id, { onDelete: 'set null' }),
   title: text('title').notNull(),
   description: text('description'),
@@ -28,6 +39,7 @@ export const milestones = sqliteTable('milestones', {
 
 export const tasks = sqliteTable('tasks', {
   id: text('id').primaryKey(),
+  spaceId: text('space_id').notNull().references(() => spaces.id, { onDelete: 'cascade' }),
   areaId: text('area_id').references(() => areas.id, { onDelete: 'set null' }),
   goalId: text('goal_id').references(() => goals.id, { onDelete: 'set null' }),
   title: text('title').notNull(),
@@ -40,6 +52,7 @@ export const tasks = sqliteTable('tasks', {
 
 export const habits = sqliteTable('habits', {
   id: text('id').primaryKey(),
+  spaceId: text('space_id').notNull().references(() => spaces.id, { onDelete: 'cascade' }),
   areaId: text('area_id').references(() => areas.id, { onDelete: 'set null' }),
   goalId: text('goal_id').references(() => goals.id, { onDelete: 'set null' }),
   title: text('title').notNull(),
@@ -62,6 +75,7 @@ export const completions = sqliteTable('completions', {
 
 export const conversations = sqliteTable('conversations', {
   id: text('id').primaryKey(),
+  spaceId: text('space_id').notNull().references(() => spaces.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
@@ -86,6 +100,8 @@ export const sessions = sqliteTable('sessions', {
 });
 
 // Type exports
+export type Space = typeof spaces.$inferSelect;
+export type NewSpace = typeof spaces.$inferInsert;
 export type Area = typeof areas.$inferSelect;
 export type NewArea = typeof areas.$inferInsert;
 export type Goal = typeof goals.$inferSelect;

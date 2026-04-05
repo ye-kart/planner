@@ -15,13 +15,14 @@ const DEFAULT_AREAS = [
   'Community',
 ];
 
-export function seedDefaultAreas(db: DB): void {
+export function seedDefaultAreas(db: DB, spaceId: string): void {
   const existing = db.select().from(areas).all();
   if (existing.length > 0) return; // Already seeded
 
   for (let i = 0; i < DEFAULT_AREAS.length; i++) {
     db.insert(areas).values({
       id: generateId(),
+      spaceId,
       name: DEFAULT_AREAS[i],
       position: i,
     }).run();

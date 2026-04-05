@@ -2,7 +2,7 @@ import { render } from 'ink-testing-library';
 import { ThemeContext, themes } from '../../packages/tui/src/tui/themes/index.js';
 import { ServicesContext } from '../../packages/tui/src/tui/hooks/use-services.js';
 import { createTestContainer } from '@planner/core';
-import { createTestDb } from './helpers/db.js';
+import { createTestDb, createTestSpace } from './helpers/db.js';
 import { DashboardScreen } from '../../packages/tui/src/tui/screens/dashboard.js';
 import { AreasScreen } from '../../packages/tui/src/tui/screens/areas.js';
 import { GoalsScreen } from '../../packages/tui/src/tui/screens/goals.js';
@@ -25,7 +25,8 @@ const noop = () => {};
 
 function createWrapper() {
   const db = createTestDb();
-  const core = createTestContainer(db);
+  const spaceId = createTestSpace(db);
+  const core = createTestContainer(db, spaceId);
   // Seed some data
   core.areaService.add('Work', 'Work area');
   core.areaService.add('Health');

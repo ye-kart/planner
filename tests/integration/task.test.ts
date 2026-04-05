@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createTestDb } from './helpers/db.js';
+import { createTestDb, createTestSpace } from './helpers/db.js';
 import {
   AreaRepository, GoalRepository, TaskRepository, MilestoneRepository, HabitRepository,
   AreaService, GoalService, TaskService,
@@ -7,17 +7,19 @@ import {
 } from '@planner/core';
 
 let db: DB;
+let spaceId: string;
 let areaService: AreaService;
 let goalService: GoalService;
 let taskService: TaskService;
 
 beforeEach(() => {
   db = createTestDb();
-  const areaRepo = new AreaRepository(db);
-  const goalRepo = new GoalRepository(db);
+  spaceId = createTestSpace(db);
+  const areaRepo = new AreaRepository(db, spaceId);
+  const goalRepo = new GoalRepository(db, spaceId);
   const milestoneRepo = new MilestoneRepository(db);
-  const taskRepo = new TaskRepository(db);
-  const habitRepo = new HabitRepository(db);
+  const taskRepo = new TaskRepository(db, spaceId);
+  const habitRepo = new HabitRepository(db, spaceId);
   areaService = new AreaService(areaRepo, goalRepo, taskRepo, habitRepo);
   goalService = new GoalService(goalRepo, milestoneRepo, areaRepo, taskRepo, habitRepo);
   taskService = new TaskService(taskRepo, areaRepo, goalRepo);

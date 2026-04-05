@@ -2,30 +2,31 @@ import {
   createTestContainer,
   type DB,
   SessionRepository,
-  ConversationRepository,
-  MessageRepository,
+  SpaceRepository,
+  SpaceService,
 } from '@planner/core';
 import { ChatService, type AiContainer } from '@planner/ai';
 import { createApp, type ApiContainer } from '@planner/api';
-import { createTestDb } from '../helpers/db';
+import { createTestDb, createTestSpace } from '../helpers/db';
 
-export function createTestApiContainer(db: DB): ApiContainer {
-  const core = createTestContainer(db);
-  const conversationRepo = new ConversationRepository(db);
-  const messageRepo = new MessageRepository(db);
+export function createTestApiContainer(db: DB, spaceId: string): ApiContainer {
+  const core = createTestContainer(db, spaceId);
   const sessionRepo = new SessionRepository(db);
+  const spaceRepo = new SpaceRepository(db);
+  const spaceService = new SpaceService(spaceRepo);
 
   const chatService = new ChatService(
-    conversationRepo, messageRepo, core.configService,
+    core.conversationRepo, core.messageRepo, core.configService,
     core.areaService, core.goalService, core.taskService, core.habitService, core.contextService,
   );
 
-  return { ...core, chatService, sessionRepo };
+  return { ...core, chatService, sessionRepo, spaceService };
 }
 
 export function createTestApp() {
   const db = createTestDb();
-  const container = createTestApiContainer(db);
-  const { app } = createApp(container);
-  return { app, container, db };
+  const spaceId = createTestSpace(db);
+  const container = createTestApiContainer(db, spaceId);
+  const { app } = createApp({ container, db });
+  return { app, container, db, spaceId };
 }

@@ -2,14 +2,15 @@ import { api } from './client';
 import type { Conversation, Message } from './types';
 
 export const chatApi = {
-  isConfigured: () => api.get<{ configured: boolean }>('/api/chat/configured'),
-  listConversations: () => api.get<Conversation[]>('/api/chat/conversations'),
-  createConversation: (title?: string) => api.post<Conversation>('/api/chat/conversations', { title }),
-  deleteConversation: (id: string) => api.delete(`/api/chat/conversations/${id}`),
-  clearAll: () => api.delete('/api/chat/conversations'),
-  getMessages: (id: string) => api.get<Message[]>(`/api/chat/conversations/${id}/messages`),
+  isConfigured: (spaceId: string) => api.get<{ configured: boolean }>(`/api/spaces/${spaceId}/chat/configured`),
+  listConversations: (spaceId: string) => api.get<Conversation[]>(`/api/spaces/${spaceId}/chat/conversations`),
+  createConversation: (spaceId: string, title?: string) => api.post<Conversation>(`/api/spaces/${spaceId}/chat/conversations`, { title }),
+  deleteConversation: (spaceId: string, id: string) => api.delete(`/api/spaces/${spaceId}/chat/conversations/${id}`),
+  clearAll: (spaceId: string) => api.delete(`/api/spaces/${spaceId}/chat/conversations`),
+  getMessages: (spaceId: string, id: string) => api.get<Message[]>(`/api/spaces/${spaceId}/chat/conversations/${id}/messages`),
 
   sendMessage: (
+    spaceId: string,
     conversationId: string,
     message: string,
     currentScreen: string,
@@ -23,7 +24,7 @@ export const chatApi = {
   ): AbortController => {
     const controller = new AbortController();
 
-    fetch(`/api/chat/conversations/${conversationId}/messages`, {
+    fetch(`/api/spaces/${spaceId}/chat/conversations/${conversationId}/messages`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',

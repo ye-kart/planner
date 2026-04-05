@@ -2,13 +2,14 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { createTestApp } from './helpers';
 
 let app: ReturnType<typeof createTestApp>['app'];
+let spaceId: string;
 
 beforeEach(() => {
-  ({ app } = createTestApp());
+  ({ app, spaceId } = createTestApp());
 });
 
 async function createHabit(title: string, extra?: Record<string, unknown>) {
-  const res = await app.request('/api/habits', {
+  const res = await app.request(`/api/spaces/${spaceId}/habits`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title, ...extra }),
@@ -20,7 +21,7 @@ describe('Habits API', () => {
   it('creates and lists habits', async () => {
     await createHabit('Exercise');
 
-    const res = await app.request('/api/habits');
+    const res = await app.request(`/api/spaces/${spaceId}/habits`);
     const habits = await res.json();
     expect(habits).toHaveLength(1);
     expect(habits[0].title).toBe('Exercise');
@@ -30,7 +31,7 @@ describe('Habits API', () => {
   it('checks and unchecks a habit', async () => {
     const habit = await createHabit('Meditate');
 
-    const checkRes = await app.request(`/api/habits/${habit.id}/check`, {
+    const checkRes = await app.request(`/api/spaces/${spaceId}/habits/${habit.id}/check`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({}),
@@ -38,7 +39,7 @@ describe('Habits API', () => {
     expect(checkRes.status).toBe(200);
 
     // Uncheck
-    const uncheckRes = await app.request(`/api/habits/${habit.id}/uncheck`, {
+    const uncheckRes = await app.request(`/api/spaces/${spaceId}/habits/${habit.id}/uncheck`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({}),
@@ -49,11 +50,11 @@ describe('Habits API', () => {
   it('archives and restores a habit', async () => {
     const habit = await createHabit('Reading');
 
-    const archiveRes = await app.request(`/api/habits/${habit.id}/archive`, { method: 'POST' });
+    const archiveRes = await app.request(`/api/spaces/${spaceId}/habits/${habit.id}/archive`, { method: 'POST' });
     const archived = await archiveRes.json();
     expect(archived.active).toBe(false);
 
-    const restoreRes = await app.request(`/api/habits/${habit.id}/restore`, { method: 'POST' });
+    const restoreRes = await app.request(`/api/spaces/${spaceId}/habits/${habit.id}/restore`, { method: 'POST' });
     const restored = await restoreRes.json();
     expect(restored.active).toBe(true);
   });
@@ -61,9 +62,9 @@ describe('Habits API', () => {
   it('deletes a habit', async () => {
     const habit = await createHabit('Delete me');
 
-    await app.request(`/api/habits/${habit.id}`, { method: 'DELETE' });
+    await app.request(`/api/spaces/${spaceId}/habits/${habit.id}`, { method: 'DELETE' });
 
-    const res = await app.request('/api/habits');
+    const res = await app.request(`/api/spaces/${spaceId}/habits`);
     const habits = await res.json();
     expect(habits).toHaveLength(0);
   });
@@ -71,7 +72,7 @@ describe('Habits API', () => {
   it('returns today habits', async () => {
     await createHabit('Daily habit');
 
-    const res = await app.request('/api/habits/today');
+    const res = await app.request(`/api/spaces/${spaceId}/habits/today`);
     expect(res.status).toBe(200);
     const habits = await res.json();
     expect(habits).toHaveLength(1);
@@ -81,7 +82,7 @@ describe('Habits API', () => {
   it('returns streaks', async () => {
     await createHabit('Streak habit');
 
-    const res = await app.request('/api/habits/streaks');
+    const res = await app.request(`/api/spaces/${spaceId}/habits/streaks`);
     expect(res.status).toBe(200);
     const streaks = await res.json();
     expect(streaks).toHaveLength(1);

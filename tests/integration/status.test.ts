@@ -1,13 +1,15 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createTestDb } from './helpers/db.js';
+import { createTestDb, createTestSpace } from './helpers/db.js';
 import { createTestContainer, today, type DB } from '@planner/core';
 
 let db: DB;
+let spaceId: string;
 let container: ReturnType<typeof createTestContainer>;
 
 beforeEach(() => {
   db = createTestDb();
-  container = createTestContainer(db);
+  spaceId = createTestSpace(db);
+  container = createTestContainer(db, spaceId);
 });
 
 describe('StatusService', () => {

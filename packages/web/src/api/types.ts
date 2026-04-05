@@ -1,3 +1,12 @@
+export interface Space {
+  id: string;
+  name: string;
+  description: string | null;
+  icon: string | null;
+  position: number;
+  createdAt: string;
+}
+
 export interface Area {
   id: string;
   name: string;

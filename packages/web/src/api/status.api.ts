@@ -2,5 +2,5 @@ import { api } from './client';
 import type { StatusData } from './types';
 
 export const statusApi = {
-  get: () => api.get<StatusData>('/api/status'),
+  get: (spaceId: string) => api.get<StatusData>(`/api/spaces/${spaceId}/status`),
 };

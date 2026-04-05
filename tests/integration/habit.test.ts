@@ -1,15 +1,17 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createTestDb } from './helpers/db.js';
+import { createTestDb, createTestSpace } from './helpers/db.js';
 import { AreaRepository, GoalRepository, HabitRepository, CompletionRepository, HabitService, type DB } from '@planner/core';
 
 let db: DB;
+let spaceId: string;
 let habitService: HabitService;
 
 beforeEach(() => {
   db = createTestDb();
-  const areaRepo = new AreaRepository(db);
-  const goalRepo = new GoalRepository(db);
-  const habitRepo = new HabitRepository(db);
+  spaceId = createTestSpace(db);
+  const areaRepo = new AreaRepository(db, spaceId);
+  const goalRepo = new GoalRepository(db, spaceId);
+  const habitRepo = new HabitRepository(db, spaceId);
   const completionRepo = new CompletionRepository(db);
   habitService = new HabitService(habitRepo, completionRepo, areaRepo, goalRepo);
 });

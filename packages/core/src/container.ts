@@ -1,4 +1,6 @@
+import { sql } from 'drizzle-orm';
 import { getDb, type DB } from './db/connection.js';
+import { SpaceRepository } from './repositories/space.repository.js';
 import { AreaRepository } from './repositories/area.repository.js';
 import { GoalRepository } from './repositories/goal.repository.js';
 import { MilestoneRepository } from './repositories/milestone.repository.js';
@@ -8,6 +10,7 @@ import { CompletionRepository } from './repositories/completion.repository.js';
 import { ConversationRepository } from './repositories/conversation.repository.js';
 import { MessageRepository } from './repositories/message.repository.js';
 import { SessionRepository } from './repositories/session.repository.js';
+import { SpaceService } from './services/space.service.js';
 import { InitService } from './services/init.service.js';
 import { AreaService } from './services/area.service.js';
 import { GoalService } from './services/goal.service.js';
@@ -18,19 +21,23 @@ import { StatusService } from './services/status.service.js';
 import { ConfigService } from './services/config.service.js';
 import { ExportService } from './services/export.service.js';
 
-export function createCoreContainer(db: DB) {
-  // Repositories
-  const areaRepo = new AreaRepository(db);
-  const goalRepo = new GoalRepository(db);
+export function createCoreContainer(db: DB, spaceId: string) {
+  // Unscoped repositories
+  const spaceRepo = new SpaceRepository(db);
   const milestoneRepo = new MilestoneRepository(db);
-  const taskRepo = new TaskRepository(db);
-  const habitRepo = new HabitRepository(db);
   const completionRepo = new CompletionRepository(db);
-  const conversationRepo = new ConversationRepository(db);
   const messageRepo = new MessageRepository(db);
   const sessionRepo = new SessionRepository(db);
 
+  // Space-scoped repositories
+  const areaRepo = new AreaRepository(db, spaceId);
+  const goalRepo = new GoalRepository(db, spaceId);
+  const taskRepo = new TaskRepository(db, spaceId);
+  const habitRepo = new HabitRepository(db, spaceId);
+  const conversationRepo = new ConversationRepository(db, spaceId);
+
   // Services
+  const spaceService = new SpaceService(spaceRepo);
   const initService = new InitService(db);
   const areaService = new AreaService(areaRepo, goalRepo, taskRepo, habitRepo);
   const goalService = new GoalService(goalRepo, milestoneRepo, areaRepo, taskRepo, habitRepo);
@@ -42,6 +49,7 @@ export function createCoreContainer(db: DB) {
   const exportService = new ExportService(contextService);
 
   return {
+    spaceService,
     initService,
     areaService,
     goalService,
@@ -51,7 +59,7 @@ export function createCoreContainer(db: DB) {
     statusService,
     configService,
     exportService,
-    // Exposed for consumer packages to extend (e.g., TUI creates ChatService)
+    // Exposed for consumer packages to extend
     conversationRepo,
     messageRepo,
     sessionRepo,
@@ -64,11 +72,32 @@ let _container: CoreContainer | null = null;
 
 export function getContainer(): CoreContainer {
   if (!_container) {
-    _container = createCoreContainer(getDb());
+    const db = getDb();
+    const configService = new ConfigService();
+    const spaceId = resolveSpaceId(db, configService);
+    _container = createCoreContainer(db, spaceId);
   }
   return _container;
 }
 
-export function createTestContainer(db: DB): CoreContainer {
-  return createCoreContainer(db);
+export function createTestContainer(db: DB, spaceId: string): CoreContainer {
+  return createCoreContainer(db, spaceId);
+}
+
+function resolveSpaceId(db: DB, configService: ConfigService): string {
+  // 1. Check config file for a saved space
+  const savedId = configService.getCurrentSpaceId();
+  if (savedId) {
+    const exists = db.all(sql`SELECT id FROM spaces WHERE id = ${savedId}`);
+    if (exists.length > 0) return savedId;
+  }
+
+  // 2. Fall back to the first space by position
+  const first = db.all(sql`SELECT id FROM spaces ORDER BY position ASC LIMIT 1`);
+  if (first.length > 0) {
+    return (first[0] as { id: string }).id;
+  }
+
+  // 3. No spaces yet (pre-init) — return a placeholder that will be replaced after init
+  return '__uninitialized__';
 }

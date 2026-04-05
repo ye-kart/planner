@@ -1,11 +1,14 @@
 import { Hono } from 'hono';
+import type { Context } from 'hono';
 import type { ApiContainer } from '../container.js';
 
-export function createGoalsRoutes(container: ApiContainer): Hono {
+type ContainerGetter = (c: Context) => ApiContainer;
+
+export function createGoalsRoutes(getContainer: ContainerGetter): Hono {
   const app = new Hono();
-  const { goalService } = container;
 
   app.get('/', (c) => {
+    const { goalService } = getContainer(c);
     const areaId = c.req.query('areaId');
     const status = c.req.query('status');
     const goals = goalService.list({ areaId, status });
@@ -13,11 +16,13 @@ export function createGoalsRoutes(container: ApiContainer): Hono {
   });
 
   app.get('/:id', (c) => {
+    const { goalService } = getContainer(c);
     const detail = goalService.show(c.req.param('id'));
     return c.json(detail);
   });
 
   app.post('/', async (c) => {
+    const { goalService } = getContainer(c);
     const body = await c.req.json<{
       title: string;
       areaId?: string;
@@ -35,6 +40,7 @@ export function createGoalsRoutes(container: ApiContainer): Hono {
   });
 
   app.patch('/:id', async (c) => {
+    const { goalService } = getContainer(c);
     const body = await c.req.json<{
       title?: string;
       areaId?: string | null;
@@ -48,39 +54,46 @@ export function createGoalsRoutes(container: ApiContainer): Hono {
   });
 
   app.delete('/:id', (c) => {
+    const { goalService } = getContainer(c);
     goalService.remove(c.req.param('id'));
     return c.json({ ok: true });
   });
 
   app.post('/:id/progress', async (c) => {
+    const { goalService } = getContainer(c);
     const body = await c.req.json<{ progress: number }>();
     const goal = goalService.setProgress(c.req.param('id'), body.progress);
     return c.json(goal);
   });
 
   app.post('/:id/done', (c) => {
+    const { goalService } = getContainer(c);
     const goal = goalService.markDone(c.req.param('id'));
     return c.json(goal);
   });
 
   app.post('/:id/archive', (c) => {
+    const { goalService } = getContainer(c);
     const goal = goalService.archive(c.req.param('id'));
     return c.json(goal);
   });
 
   // Milestone sub-routes
   app.post('/:id/milestones', async (c) => {
+    const { goalService } = getContainer(c);
     const body = await c.req.json<{ title: string }>();
     const milestone = goalService.addMilestone(c.req.param('id'), body.title);
     return c.json(milestone, 201);
   });
 
   app.post('/milestones/:msId/toggle', (c) => {
+    const { goalService } = getContainer(c);
     const milestone = goalService.toggleMilestone(c.req.param('msId'));
     return c.json(milestone);
   });
 
   app.delete('/milestones/:msId', (c) => {
+    const { goalService } = getContainer(c);
     goalService.removeMilestone(c.req.param('msId'));
     return c.json({ ok: true });
   });

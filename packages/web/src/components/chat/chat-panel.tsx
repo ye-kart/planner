@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { chatApi } from '../../api/chat.api';
 import { useKeyboardStore } from '../../stores/keyboard.store';
+import { useCurrentSpace } from '../../contexts/space-context';
 import { ChatMessage } from './chat-message';
 import { ToolCallDisplay } from './tool-call-display';
 import type { Message, Conversation } from '../../api/types';
@@ -28,17 +29,18 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const controllerRef = useRef<AbortController | null>(null);
   const setInputFocused = useKeyboardStore((s) => s.setInputFocused);
+  const { spaceId } = useCurrentSpace();
   const qc = useQueryClient();
 
   useEffect(() => {
-    chatApi.listConversations().then(setConversations);
-  }, []);
+    chatApi.listConversations(spaceId).then(setConversations);
+  }, [spaceId]);
 
   useEffect(() => {
     if (activeConvId) {
-      chatApi.getMessages(activeConvId).then(setMessages);
+      chatApi.getMessages(spaceId, activeConvId).then(setMessages);
     }
-  }, [activeConvId]);
+  }, [activeConvId, spaceId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -49,7 +51,7 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
 
     let convId = activeConvId;
     if (!convId) {
-      const conv = await chatApi.createConversation(input.slice(0, 50));
+      const conv = await chatApi.createConversation(spaceId, input.slice(0, 50));
       convId = conv.id;
       setActiveConvId(conv.id);
       setConversations((prev) => [conv, ...prev]);
@@ -67,14 +69,14 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
       { id: `temp-${Date.now()}`, conversationId: convId!, role: 'user', content: userMsg, toolCallId: null, toolCalls: null, createdAt: new Date().toISOString(), position: prev.length },
     ]);
 
-    controllerRef.current = chatApi.sendMessage(convId!, userMsg, 'web', {
+    controllerRef.current = chatApi.sendMessage(spaceId, convId!, userMsg, 'web', {
       onToken: (token) => setStreamTokens((prev) => prev + token),
       onToolCall: (name, args) => setStreamEvents((prev) => [...prev, { type: 'tool_call', data: args, toolName: name }]),
       onToolResult: (name, result) => setStreamEvents((prev) => [...prev, { type: 'tool_result', data: result, toolName: name }]),
       onComplete: () => {
         setStreaming(false);
         // Refresh messages from server to get persisted versions
-        chatApi.getMessages(convId!).then(setMessages);
+        chatApi.getMessages(spaceId, convId!).then(setMessages);
         setStreamTokens('');
         setStreamEvents([]);
         // Invalidate all data queries since AI may have mutated data

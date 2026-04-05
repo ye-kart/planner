@@ -1,11 +1,14 @@
 import { Hono } from 'hono';
+import type { Context } from 'hono';
 import type { ApiContainer } from '../container.js';
 
-export function createTasksRoutes(container: ApiContainer): Hono {
+type ContainerGetter = (c: Context) => ApiContainer;
+
+export function createTasksRoutes(getContainer: ContainerGetter): Hono {
   const app = new Hono();
-  const { taskService } = container;
 
   app.get('/', (c) => {
+    const { taskService } = getContainer(c);
     const status = c.req.query('status');
     const priority = c.req.query('priority');
     const areaId = c.req.query('areaId');
@@ -15,11 +18,13 @@ export function createTasksRoutes(container: ApiContainer): Hono {
   });
 
   app.get('/:id', (c) => {
+    const { taskService } = getContainer(c);
     const task = taskService.show(c.req.param('id'));
     return c.json(task);
   });
 
   app.post('/', async (c) => {
+    const { taskService } = getContainer(c);
     const body = await c.req.json<{
       title: string;
       areaId?: string;
@@ -39,6 +44,7 @@ export function createTasksRoutes(container: ApiContainer): Hono {
   });
 
   app.patch('/:id', async (c) => {
+    const { taskService } = getContainer(c);
     const body = await c.req.json<{
       title?: string;
       status?: string;
@@ -53,16 +59,19 @@ export function createTasksRoutes(container: ApiContainer): Hono {
   });
 
   app.delete('/:id', (c) => {
+    const { taskService } = getContainer(c);
     taskService.remove(c.req.param('id'));
     return c.json({ ok: true });
   });
 
   app.post('/:id/done', (c) => {
+    const { taskService } = getContainer(c);
     const task = taskService.markDone(c.req.param('id'));
     return c.json(task);
   });
 
   app.post('/:id/start', (c) => {
+    const { taskService } = getContainer(c);
     const task = taskService.start(c.req.param('id'));
     return c.json(task);
   });

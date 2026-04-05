@@ -1,17 +1,23 @@
 import { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useKeyboardStore } from '../stores/keyboard.store';
 import { useThemeStore } from '../stores/theme.store';
 
-const SCREEN_ROUTES = ['/', '/areas', '/goals', '/tasks', '/habits'];
+const SCREEN_SUFFIXES = ['', '/areas', '/goals', '/tasks', '/habits'];
 
 export function useKeyboard() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { spaceId } = useParams<{ spaceId: string }>();
   const { inputFocused, overlayOpen } = useKeyboardStore();
   const cycleTheme = useThemeStore((s) => s.cycleTheme);
 
   useEffect(() => {
+    if (!spaceId) return;
+
+    const basePath = `/spaces/${spaceId}`;
+    const screenRoutes = SCREEN_SUFFIXES.map(s => basePath + s);
+
     function handleKeyDown(e: KeyboardEvent) {
       // Never capture when input is focused
       if (inputFocused) return;
@@ -28,8 +34,8 @@ export function useKeyboard() {
       // Screen navigation: 1-5
       if (e.key >= '1' && e.key <= '5') {
         const idx = parseInt(e.key) - 1;
-        if (SCREEN_ROUTES[idx]) {
-          navigate(SCREEN_ROUTES[idx]);
+        if (screenRoutes[idx]) {
+          navigate(screenRoutes[idx]);
         }
         return;
       }
@@ -37,11 +43,11 @@ export function useKeyboard() {
       // Tab / Shift+Tab for prev/next screen
       if (e.key === 'Tab') {
         e.preventDefault();
-        const currentIdx = SCREEN_ROUTES.indexOf(location.pathname);
+        const currentIdx = screenRoutes.indexOf(location.pathname);
         if (currentIdx === -1) return;
         const delta = e.shiftKey ? -1 : 1;
-        const nextIdx = (currentIdx + delta + SCREEN_ROUTES.length) % SCREEN_ROUTES.length;
-        navigate(SCREEN_ROUTES[nextIdx]);
+        const nextIdx = (currentIdx + delta + screenRoutes.length) % screenRoutes.length;
+        navigate(screenRoutes[nextIdx]);
         return;
       }
 
@@ -60,5 +66,5 @@ export function useKeyboard() {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [inputFocused, overlayOpen, navigate, location.pathname, cycleTheme]);
+  }, [inputFocused, overlayOpen, navigate, location.pathname, cycleTheme, spaceId]);
 }

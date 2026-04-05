@@ -8,9 +8,11 @@ import { registerHabitsCommand } from './habits.command.js';
 import { registerContextCommand } from './context.command.js';
 import { registerTuiCommand } from './tui.command.js';
 import { registerExportCommand } from './export.command.js';
+import { registerSpacesCommand } from './spaces.command.js';
 
 export function registerCommands(program: Command): void {
   registerInitCommand(program);
+  registerSpacesCommand(program);
   registerStatusCommand(program);
   registerAreasCommand(program);
   registerGoalsCommand(program);

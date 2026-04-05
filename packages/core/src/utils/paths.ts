@@ -8,3 +8,7 @@ export function getPlannerDir(): string {
 export function getDbPath(): string {
   return join(getPlannerDir(), 'planner.db');
 }
+
+export function getConfigPath(): string {
+  return join(getPlannerDir(), 'config.json');
+}

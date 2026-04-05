@@ -1,11 +1,14 @@
 import { Hono } from 'hono';
+import type { Context } from 'hono';
 import type { ApiContainer } from '../container.js';
 
-export function createStatusRoutes(container: ApiContainer): Hono {
+type ContainerGetter = (c: Context) => ApiContainer;
+
+export function createStatusRoutes(getContainer: ContainerGetter): Hono {
   const app = new Hono();
-  const { statusService } = container;
 
   app.get('/', (c) => {
+    const { statusService } = getContainer(c);
     const status = statusService.getStatus();
     return c.json(status);
   });

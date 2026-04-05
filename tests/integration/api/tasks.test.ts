@@ -2,13 +2,14 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { createTestApp } from './helpers';
 
 let app: ReturnType<typeof createTestApp>['app'];
+let spaceId: string;
 
 beforeEach(() => {
-  ({ app } = createTestApp());
+  ({ app, spaceId } = createTestApp());
 });
 
 async function createTask(title: string, extra?: Record<string, unknown>) {
-  const res = await app.request('/api/tasks', {
+  const res = await app.request(`/api/spaces/${spaceId}/tasks`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title, ...extra }),
@@ -21,7 +22,7 @@ describe('Tasks API', () => {
     await createTask('Buy groceries');
     await createTask('Clean house');
 
-    const res = await app.request('/api/tasks');
+    const res = await app.request(`/api/spaces/${spaceId}/tasks`);
     expect(res.status).toBe(200);
     const tasks = await res.json();
     expect(tasks).toHaveLength(2);
@@ -31,14 +32,14 @@ describe('Tasks API', () => {
     await createTask('Task 1');
     const task2 = await createTask('Task 2');
 
-    await app.request(`/api/tasks/${task2.id}/done`, { method: 'POST' });
+    await app.request(`/api/spaces/${spaceId}/tasks/${task2.id}/done`, { method: 'POST' });
 
-    const todoRes = await app.request('/api/tasks?status=todo');
+    const todoRes = await app.request(`/api/spaces/${spaceId}/tasks?status=todo`);
     const todos = await todoRes.json();
     expect(todos).toHaveLength(1);
     expect(todos[0].title).toBe('Task 1');
 
-    const doneRes = await app.request('/api/tasks?status=done');
+    const doneRes = await app.request(`/api/spaces/${spaceId}/tasks?status=done`);
     const dones = await doneRes.json();
     expect(dones).toHaveLength(1);
     expect(dones[0].title).toBe('Task 2');
@@ -47,7 +48,7 @@ describe('Tasks API', () => {
   it('marks task as done', async () => {
     const task = await createTask('Do something');
 
-    const res = await app.request(`/api/tasks/${task.id}/done`, { method: 'POST' });
+    const res = await app.request(`/api/spaces/${spaceId}/tasks/${task.id}/done`, { method: 'POST' });
     expect(res.status).toBe(200);
     const updated = await res.json();
     expect(updated.status).toBe('done');
@@ -57,7 +58,7 @@ describe('Tasks API', () => {
   it('starts a task', async () => {
     const task = await createTask('Start me');
 
-    const res = await app.request(`/api/tasks/${task.id}/start`, { method: 'POST' });
+    const res = await app.request(`/api/spaces/${spaceId}/tasks/${task.id}/start`, { method: 'POST' });
     expect(res.status).toBe(200);
     const updated = await res.json();
     expect(updated.status).toBe('in_progress');
@@ -66,7 +67,7 @@ describe('Tasks API', () => {
   it('updates a task', async () => {
     const task = await createTask('Old title');
 
-    const res = await app.request(`/api/tasks/${task.id}`, {
+    const res = await app.request(`/api/spaces/${spaceId}/tasks/${task.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title: 'New title', priority: 'high' }),
@@ -80,10 +81,10 @@ describe('Tasks API', () => {
   it('deletes a task', async () => {
     const task = await createTask('Delete me');
 
-    const delRes = await app.request(`/api/tasks/${task.id}`, { method: 'DELETE' });
+    const delRes = await app.request(`/api/spaces/${spaceId}/tasks/${task.id}`, { method: 'DELETE' });
     expect(delRes.status).toBe(200);
 
-    const listRes = await app.request('/api/tasks');
+    const listRes = await app.request(`/api/spaces/${spaceId}/tasks`);
     const list = await listRes.json();
     expect(list).toHaveLength(0);
   });

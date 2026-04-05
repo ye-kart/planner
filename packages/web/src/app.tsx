@@ -1,6 +1,8 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AppLayout } from './components/layout/app-layout';
+import { SpaceProvider } from './contexts/space-context';
+import { SpaceRedirect } from './components/layout/space-redirect';
 import { DashboardPage } from './pages/dashboard';
 import { AreasPage } from './pages/areas';
 import { GoalsPage } from './pages/goals';
@@ -26,13 +28,16 @@ export function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
-          <Route element={<KeyboardProvider><AppLayout /></KeyboardProvider>}>
-            <Route path="/" element={<DashboardPage />} />
-            <Route path="/areas" element={<AreasPage />} />
-            <Route path="/goals" element={<GoalsPage />} />
-            <Route path="/tasks" element={<TasksPage />} />
-            <Route path="/habits" element={<HabitsPage />} />
+          <Route path="/" element={<SpaceRedirect />} />
+          <Route path="/spaces/:spaceId" element={<SpaceProvider><KeyboardProvider><AppLayout /></KeyboardProvider></SpaceProvider>}>
+            <Route index element={<DashboardPage />} />
+            <Route path="areas" element={<AreasPage />} />
+            <Route path="goals" element={<GoalsPage />} />
+            <Route path="tasks" element={<TasksPage />} />
+            <Route path="habits" element={<HabitsPage />} />
           </Route>
+          {/* Catch-all redirect for old routes */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

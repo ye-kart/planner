@@ -1,9 +1,8 @@
 import {
   getContainer,
+  createCoreContainer,
   type CoreContainer,
-  ConversationRepository,
-  MessageRepository,
-  getDb,
+  type DB,
 } from '@planner/core';
 import { ChatService } from './services/chat.service.js';
 
@@ -13,12 +12,20 @@ export interface AiContainer extends CoreContainer {
 
 export function createAiContainer(): AiContainer {
   const core = getContainer();
-  const db = getDb();
-  const conversationRepo = new ConversationRepository(db);
-  const messageRepo = new MessageRepository(db);
 
   const chatService = new ChatService(
-    conversationRepo, messageRepo, core.configService,
+    core.conversationRepo, core.messageRepo, core.configService,
+    core.areaService, core.goalService, core.taskService, core.habitService, core.contextService,
+  );
+
+  return { ...core, chatService };
+}
+
+export function createAiContainerWith(db: DB, spaceId: string): AiContainer {
+  const core = createCoreContainer(db, spaceId);
+
+  const chatService = new ChatService(
+    core.conversationRepo, core.messageRepo, core.configService,
     core.areaService, core.goalService, core.taskService, core.habitService, core.contextService,
   );
 
