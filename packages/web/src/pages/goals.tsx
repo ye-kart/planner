@@ -128,17 +128,17 @@ export function GoalsPage() {
     <div className="space-y-4 max-w-2xl">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-[var(--color-text-accent)]">Goals</h1>
-        <button onClick={() => setShowAdd(true)} className="px-3 py-1.5 text-sm rounded bg-[var(--color-accent-1)] text-[var(--color-bg)] font-medium hover:opacity-90">
+        <button onClick={() => setShowAdd(true)} className="px-4 py-2 text-sm rounded-lg bg-[var(--color-accent-1)] text-[var(--color-bg)] font-medium hover:opacity-90 active:opacity-80 transition-opacity">
           + New Goal
         </button>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-1.5 bg-[var(--color-bg-panel)] rounded-lg p-1 border border-[var(--color-border)]">
         {FILTERS.map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-3 py-1 text-xs rounded ${filter === f ? 'bg-[var(--color-tab-active)] text-[var(--color-bg)]' : 'text-[var(--color-tab-inactive)] hover:text-[var(--color-text-primary)]'}`}
+            className={`flex-1 px-3 py-1.5 text-xs rounded-md font-medium transition-colors ${filter === f ? 'bg-[var(--color-tab-active)] text-[var(--color-bg)]' : 'text-[var(--color-tab-inactive)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-highlight)]'}`}
           >
             {f}
           </button>
@@ -181,25 +181,32 @@ export function GoalsPage() {
         />
       )}
 
-      <div className="space-y-1">
+      <div className="space-y-2">
         {goals?.map((goal, i) => (
           <button
             key={goal.id}
             onClick={() => setDetailId(goal.id)}
             data-selected={i === selectedIdx ? '' : undefined}
-            className={`w-full text-left px-4 py-3 rounded transition-colors ${
+            className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
               i === selectedIdx ? 'bg-[var(--color-bg-highlight)] border border-[var(--color-border-active)]' : 'hover:bg-[var(--color-bg-highlight)] border border-transparent'
             }`}
           >
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-sm font-medium text-[var(--color-text-primary)]">{goal.title}</span>
+            <span className="text-sm font-medium text-[var(--color-text-primary)]">{goal.title}</span>
+            <div className="flex items-center gap-2 mt-1.5">
               <StatusBadge status={goal.status} />
               <PriorityBadge priority={goal.priority} />
             </div>
-            <ProgressBar value={goal.progress} className="w-full max-w-48" />
+            <ProgressBar value={goal.progress} className="w-full mt-2" />
           </button>
         ))}
-        {goals?.length === 0 && <p className="text-sm text-[var(--color-text-secondary)]">No goals matching filter</p>}
+        {goals?.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-3xl mb-2">🎯</p>
+            <p className="text-sm text-[var(--color-text-secondary)]">
+              {filter === 'all' ? 'No goals yet — press n to create one' : `No ${filter} goals`}
+            </p>
+          </div>
+        )}
       </div>
 
       <ConfirmDialog

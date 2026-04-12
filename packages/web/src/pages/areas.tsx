@@ -108,7 +108,7 @@ export function AreasPage() {
         <h1 className="text-2xl font-bold text-[var(--color-text-accent)]">Areas</h1>
         <button
           onClick={() => setShowAdd(true)}
-          className="px-3 py-1.5 text-sm rounded bg-[var(--color-accent-1)] text-[var(--color-bg)] font-medium hover:opacity-90"
+          className="px-4 py-2 text-sm rounded-lg bg-[var(--color-accent-1)] text-[var(--color-bg)] font-medium hover:opacity-90 active:opacity-80 transition-opacity"
         >
           + New Area
         </button>
@@ -147,13 +147,13 @@ export function AreasPage() {
         />
       )}
 
-      <div className="space-y-1">
+      <div className="space-y-2">
         {areas?.map((area, i) => (
           <button
             key={area.id}
             onClick={() => setDetailId(area.id)}
             data-selected={i === selectedIdx ? '' : undefined}
-            className={`w-full text-left px-4 py-3 rounded flex flex-col md:flex-row md:items-center justify-between gap-1 transition-colors ${
+            className={`w-full text-left px-4 py-3 rounded-lg flex flex-col md:flex-row md:items-center justify-between gap-1.5 transition-colors ${
               i === selectedIdx
                 ? 'bg-[var(--color-bg-highlight)] border border-[var(--color-border-active)]'
                 : 'hover:bg-[var(--color-bg-highlight)] border border-transparent'
@@ -172,6 +172,12 @@ export function AreasPage() {
             </div>
           </button>
         ))}
+        {areas?.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-3xl mb-2">#</p>
+            <p className="text-sm text-[var(--color-text-secondary)]">No areas yet — press n to create one</p>
+          </div>
+        )}
       </div>
 
       <ConfirmDialog

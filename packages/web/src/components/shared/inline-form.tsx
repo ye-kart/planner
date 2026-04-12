@@ -39,7 +39,7 @@ export function InlineForm({ open, initialValues = {}, fields, onSubmit, onCance
       >
         {fields.map((field, i) => (
           <div key={field.name}>
-            <label className="block text-xs text-[var(--color-text-secondary)] mb-1">{field.label}</label>
+            <label className="block text-xs text-[var(--color-text-secondary)] mb-1.5">{field.label}</label>
             <input
               ref={i === 0 ? firstInputRef : undefined}
               type={field.type ?? 'text'}
@@ -48,7 +48,7 @@ export function InlineForm({ open, initialValues = {}, fields, onSubmit, onCance
               required={field.required}
               onFocus={() => setInputFocused(true)}
               onBlur={() => setInputFocused(false)}
-              className="w-full px-3 py-2 rounded bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text-primary)] text-sm focus:outline-none focus:border-[var(--color-border-active)]"
+              className="w-full px-3 py-2.5 rounded-lg bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text-primary)] text-sm focus:outline-none focus:border-[var(--color-border-active)] transition-colors"
             />
           </div>
         ))}
@@ -56,13 +56,13 @@ export function InlineForm({ open, initialValues = {}, fields, onSubmit, onCance
           <button
             type="button"
             onClick={onCancel}
-            className="px-3 py-1.5 text-sm rounded border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-highlight)]"
+            className="px-4 py-2 text-sm rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-highlight)] active:opacity-80 transition-colors"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="px-3 py-1.5 text-sm rounded bg-[var(--color-accent-1)] text-[var(--color-bg)] font-medium hover:opacity-90"
+            className="px-4 py-2 text-sm rounded-lg bg-[var(--color-accent-1)] text-[var(--color-bg)] font-medium hover:opacity-90 active:opacity-80 transition-opacity"
           >
             {submitLabel}
           </button>
