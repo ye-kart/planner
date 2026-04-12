@@ -88,17 +88,17 @@ export function TasksPage() {
     <div className="space-y-4 max-w-2xl">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-[var(--color-text-accent)]">Tasks</h1>
-        <button onClick={() => setShowAdd(true)} className="px-3 py-1.5 text-sm rounded bg-[var(--color-accent-1)] text-[var(--color-bg)] font-medium hover:opacity-90">
+        <button onClick={() => setShowAdd(true)} className="px-4 py-2 text-sm rounded-lg bg-[var(--color-accent-1)] text-[var(--color-bg)] font-medium hover:opacity-90 active:opacity-80 transition-opacity">
           + New Task
         </button>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-1.5 bg-[var(--color-bg-panel)] rounded-lg p-1 border border-[var(--color-border)]">
         {FILTERS.map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-3 py-1 text-xs rounded ${filter === f ? 'bg-[var(--color-tab-active)] text-[var(--color-bg)]' : 'text-[var(--color-tab-inactive)] hover:text-[var(--color-text-primary)]'}`}
+            className={`flex-1 px-3 py-1.5 text-xs rounded-md font-medium transition-colors ${filter === f ? 'bg-[var(--color-tab-active)] text-[var(--color-bg)]' : 'text-[var(--color-tab-inactive)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-highlight)]'}`}
           >
             {f.replace('_', ' ')}
           </button>
@@ -141,52 +141,63 @@ export function TasksPage() {
         />
       )}
 
-      <div className="space-y-1">
+      <div className="space-y-2">
         {tasks?.map((task, i) => {
           const overdue = task.dueDate && task.dueDate < today && task.status !== 'done';
           return (
             <div
               key={task.id}
               data-selected={i === selectedIdx ? '' : undefined}
-              className={`px-4 py-3 rounded flex items-center gap-3 transition-colors cursor-pointer ${
+              className={`px-4 py-3 rounded-lg transition-colors cursor-pointer ${
                 i === selectedIdx ? 'bg-[var(--color-bg-highlight)] border border-[var(--color-border-active)]' : 'hover:bg-[var(--color-bg-highlight)] border border-transparent'
               }`}
               onClick={() => setSelectedIdx(i)}
             >
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (task.status !== 'done') {
-                    tasksApi.markDone(task.id).then(() => {
-                      qc.invalidateQueries({ queryKey: ['tasks'] });
-                      qc.invalidateQueries({ queryKey: ['status'] });
-                    });
-                  }
-                }}
-                className={`w-5 h-5 rounded border flex-shrink-0 flex items-center justify-center text-xs ${
-                  task.status === 'done'
-                    ? 'bg-[var(--color-success)] border-[var(--color-success)] text-[var(--color-bg)]'
-                    : 'border-[var(--color-border)] hover:border-[var(--color-border-active)]'
-                }`}
-              >
-                {task.status === 'done' ? '\u2713' : null}
-              </button>
-              <span className={`flex-1 min-w-0 text-sm ${task.status === 'done' ? 'line-through text-[var(--color-text-secondary)]' : 'text-[var(--color-text-primary)]'}`}>
-                {task.title}
-              </span>
-              <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
-                <StatusBadge status={task.status} />
-                <PriorityBadge priority={task.priority} />
-                {task.dueDate && (
-                  <span className={`text-xs whitespace-nowrap ${overdue ? 'text-[var(--color-error)]' : 'text-[var(--color-text-secondary)]'}`}>
-                    {overdue ? 'Overdue: ' : ''}{task.dueDate}
+              <div className="flex items-start gap-3">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (task.status !== 'done') {
+                      tasksApi.markDone(task.id).then(() => {
+                        qc.invalidateQueries({ queryKey: ['tasks'] });
+                        qc.invalidateQueries({ queryKey: ['status'] });
+                      });
+                    }
+                  }}
+                  className={`w-6 h-6 mt-0.5 rounded border-2 flex-shrink-0 flex items-center justify-center text-xs transition-colors ${
+                    task.status === 'done'
+                      ? 'bg-[var(--color-success)] border-[var(--color-success)] text-[var(--color-bg)]'
+                      : 'border-[var(--color-border)] hover:border-[var(--color-border-active)]'
+                  }`}
+                >
+                  {task.status === 'done' ? '\u2713' : null}
+                </button>
+                <div className="flex-1 min-w-0">
+                  <span className={`text-sm leading-snug ${task.status === 'done' ? 'line-through text-[var(--color-text-secondary)]' : 'text-[var(--color-text-primary)]'}`}>
+                    {task.title}
                   </span>
-                )}
+                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    <StatusBadge status={task.status} />
+                    <PriorityBadge priority={task.priority} />
+                    {task.dueDate && (
+                      <span className={`text-xs ${overdue ? 'text-[var(--color-error)] font-medium' : 'text-[var(--color-text-secondary)]'}`}>
+                        {overdue ? 'Overdue: ' : 'Due: '}{task.dueDate}
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           );
         })}
-        {tasks?.length === 0 && <p className="text-sm text-[var(--color-text-secondary)]">No tasks matching filter</p>}
+        {tasks?.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-3xl mb-2">{ filter === 'done' ? '🎯' : '📋' }</p>
+            <p className="text-sm text-[var(--color-text-secondary)]">
+              {filter === 'all' ? 'No tasks yet — press n to create one' : `No ${filter.replace('_', ' ')} tasks`}
+            </p>
+          </div>
+        )}
       </div>
 
       <ConfirmDialog

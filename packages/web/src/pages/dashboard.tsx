@@ -74,28 +74,35 @@ export function DashboardPage() {
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         <Panel>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-xs text-[var(--color-text-secondary)]">Tasks Due</p>
+            <span className="text-base opacity-60">{'>'}</span>
+          </div>
           <p className="text-2xl font-bold text-[var(--color-accent-1)]">{summary.tasksDue}</p>
-          <p className="text-xs text-[var(--color-text-secondary)]">Tasks Due</p>
         </Panel>
         <Panel>
-          <p className="text-2xl font-bold text-[var(--color-error)]">{summary.tasksOverdue}</p>
-          <p className="text-xs text-[var(--color-text-secondary)]">Overdue</p>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-xs text-[var(--color-text-secondary)]">Overdue</p>
+            <span className="text-base opacity-60">!</span>
+          </div>
+          <p className={`text-2xl font-bold ${summary.tasksOverdue > 0 ? 'text-[var(--color-error)]' : 'text-[var(--color-text-secondary)]'}`}>{summary.tasksOverdue}</p>
         </Panel>
         <Panel>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-xs text-[var(--color-text-secondary)]">Habits Done</p>
+            <span className="text-base opacity-60">+</span>
+          </div>
           <p className="text-2xl font-bold text-[var(--color-success)]">{summary.habitsDone}/{summary.habitsDue}</p>
-          <p className="text-xs text-[var(--color-text-secondary)]">Habits Done</p>
         </Panel>
         <Panel>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-xs text-[var(--color-text-secondary)]">{summary.bestActiveStreak ? summary.bestActiveStreak.habit : 'Streaks'}</p>
+            <span className="text-base opacity-60">~</span>
+          </div>
           {summary.bestActiveStreak ? (
-            <>
-              <p className="text-2xl font-bold text-[var(--color-streak-fire)]">{summary.bestActiveStreak.streak}</p>
-              <p className="text-xs text-[var(--color-text-secondary)] truncate">{summary.bestActiveStreak.habit}</p>
-            </>
+            <p className="text-2xl font-bold text-[var(--color-streak-fire)]">{summary.bestActiveStreak.streak}</p>
           ) : (
-            <>
-              <p className="text-2xl font-bold text-[var(--color-text-secondary)]">--</p>
-              <p className="text-xs text-[var(--color-text-secondary)]">No streaks</p>
-            </>
+            <p className="text-2xl font-bold text-[var(--color-text-secondary)]">--</p>
           )}
         </Panel>
       </div>
@@ -144,27 +151,27 @@ export function DashboardPage() {
               <li
                 key={habit.id}
                 data-selected={i === selectedIdx ? '' : undefined}
-                className={`flex items-center gap-3 text-sm rounded px-2 py-1 transition-colors ${
-                  i === selectedIdx ? 'bg-[var(--color-bg-highlight)]' : ''
+                className={`flex items-center gap-3 text-sm rounded-lg px-3 py-2 transition-colors cursor-pointer ${
+                  i === selectedIdx ? 'bg-[var(--color-bg-highlight)]' : 'hover:bg-[var(--color-bg-highlight)]'
                 }`}
+                onClick={() => {
+                  if (habit.done) {
+                    uncheckHabit.mutate({ id: habit.id });
+                  } else {
+                    checkHabit.mutate({ id: habit.id });
+                  }
+                }}
               >
-                <button
-                  onClick={() => {
-                    if (habit.done) {
-                      uncheckHabit.mutate({ id: habit.id });
-                    } else {
-                      checkHabit.mutate({ id: habit.id });
-                    }
-                  }}
-                  className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
+                <div
+                  className={`w-6 h-6 rounded border-2 flex-shrink-0 flex items-center justify-center text-xs transition-colors ${
                     habit.done
                       ? 'bg-[var(--color-success)] border-[var(--color-success)] text-[var(--color-bg)]'
                       : 'border-[var(--color-border)] hover:border-[var(--color-border-active)]'
                   }`}
                 >
                   {habit.done ? '\u2713' : null}
-                </button>
-                <span className={habit.done ? 'text-[var(--color-text-secondary)] line-through' : 'text-[var(--color-text-primary)]'}>
+                </div>
+                <span className={`flex-1 ${habit.done ? 'text-[var(--color-text-secondary)] line-through' : 'text-[var(--color-text-primary)]'}`}>
                   {habit.title}
                 </span>
                 <StreakDisplay current={habit.currentStreak} best={habit.bestStreak} />

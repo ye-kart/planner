@@ -83,23 +83,23 @@ export function HabitsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-[var(--color-text-accent)]">
           Habits
-          {allDone && <span className="ml-2 text-[var(--color-success)]">\u2728 All done!</span>}
+          {allDone && <span className="ml-2 text-[var(--color-success)]">{'\u2728'} All done!</span>}
         </h1>
-        <button onClick={() => setShowAdd(true)} className="px-3 py-1.5 text-sm rounded bg-[var(--color-accent-1)] text-[var(--color-bg)] font-medium hover:opacity-90">
+        <button onClick={() => setShowAdd(true)} className="px-4 py-2 text-sm rounded-lg bg-[var(--color-accent-1)] text-[var(--color-bg)] font-medium hover:opacity-90 active:opacity-80 transition-opacity">
           + New Habit
         </button>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-1.5 bg-[var(--color-bg-panel)] rounded-lg p-1 border border-[var(--color-border)] max-w-[200px]">
         <button
           onClick={() => { setViewMode('today'); setSelectedIdx(0); }}
-          className={`px-3 py-1 text-xs rounded ${viewMode === 'today' ? 'bg-[var(--color-tab-active)] text-[var(--color-bg)]' : 'text-[var(--color-tab-inactive)] hover:text-[var(--color-text-primary)]'}`}
+          className={`flex-1 px-3 py-1.5 text-xs rounded-md font-medium transition-colors ${viewMode === 'today' ? 'bg-[var(--color-tab-active)] text-[var(--color-bg)]' : 'text-[var(--color-tab-inactive)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-highlight)]'}`}
         >
           Today
         </button>
         <button
           onClick={() => { setViewMode('all'); setSelectedIdx(0); }}
-          className={`px-3 py-1 text-xs rounded ${viewMode === 'all' ? 'bg-[var(--color-tab-active)] text-[var(--color-bg)]' : 'text-[var(--color-tab-inactive)] hover:text-[var(--color-text-primary)]'}`}
+          className={`flex-1 px-3 py-1.5 text-xs rounded-md font-medium transition-colors ${viewMode === 'all' ? 'bg-[var(--color-tab-active)] text-[var(--color-bg)]' : 'text-[var(--color-tab-inactive)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-highlight)]'}`}
         >
           All
         </button>
@@ -135,14 +135,14 @@ export function HabitsPage() {
         />
       )}
 
-      <div className="space-y-1">
+      <div className="space-y-2">
         {displayItems?.map((habit, i) => {
           const isDone = 'done' in habit ? habit.done : false;
           return (
             <div
               key={habit.id}
               data-selected={i === selectedIdx ? '' : undefined}
-              className={`px-4 py-3 rounded flex items-center justify-between gap-2 transition-colors cursor-pointer ${
+              className={`px-4 py-3 rounded-lg flex items-center justify-between gap-2 transition-colors cursor-pointer ${
                 i === selectedIdx ? 'bg-[var(--color-bg-highlight)] border border-[var(--color-border-active)]' : 'hover:bg-[var(--color-bg-highlight)] border border-transparent'
               }`}
               onClick={() => {
@@ -158,7 +158,7 @@ export function HabitsPage() {
             >
               <div className="flex items-center gap-3 min-w-0">
                 {isToday && (
-                  <div className={`w-5 h-5 rounded border flex-shrink-0 flex items-center justify-center text-xs ${
+                  <div className={`w-6 h-6 rounded border-2 flex-shrink-0 flex items-center justify-center text-xs transition-colors ${
                     isDone
                       ? 'bg-[var(--color-success)] border-[var(--color-success)] text-[var(--color-bg)]'
                       : 'border-[var(--color-border)]'
@@ -176,9 +176,12 @@ export function HabitsPage() {
           );
         })}
         {displayItems?.length === 0 && (
-          <p className="text-sm text-[var(--color-text-secondary)]">
-            {isToday ? 'No habits due today' : 'No habits yet'}
-          </p>
+          <div className="text-center py-12">
+            <p className="text-3xl mb-2">{isToday ? '✅' : '🔄'}</p>
+            <p className="text-sm text-[var(--color-text-secondary)]">
+              {isToday ? 'No habits due today' : 'No habits yet — press n to create one'}
+            </p>
+          </div>
         )}
       </div>
 

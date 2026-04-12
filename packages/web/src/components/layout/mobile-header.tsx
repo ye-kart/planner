@@ -12,10 +12,10 @@ export function MobileHeader({ onMenuToggle, onChatToggle }: MobileHeaderProps) 
   const currentSpace = spaces?.find(s => s.id === spaceId);
 
   return (
-    <div className="md:hidden flex items-center justify-between px-3 py-2 border-b border-[var(--color-border)] bg-[var(--color-bg-panel)]">
+    <div className="md:hidden flex items-center justify-between px-3 py-2.5 border-b border-[var(--color-border)] bg-[var(--color-bg-panel)]">
       <button
         onClick={onMenuToggle}
-        className="p-1.5 rounded text-[var(--color-text-secondary)] hover:text-[var(--color-text-accent)] hover:bg-[var(--color-bg-highlight)]"
+        className="p-2 -ml-1 rounded-lg text-[var(--color-text-secondary)] hover:text-[var(--color-text-accent)] hover:bg-[var(--color-bg-highlight)] active:opacity-70 transition-colors"
         aria-label="Toggle menu"
       >
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -30,7 +30,7 @@ export function MobileHeader({ onMenuToggle, onChatToggle }: MobileHeaderProps) 
       </span>
       <button
         onClick={onChatToggle}
-        className="p-1.5 rounded text-[var(--color-text-secondary)] hover:text-[var(--color-text-accent)] hover:bg-[var(--color-bg-highlight)]"
+        className="p-2 -mr-1 rounded-lg text-[var(--color-text-secondary)] hover:text-[var(--color-text-accent)] hover:bg-[var(--color-bg-highlight)] active:opacity-70 transition-colors"
         aria-label="Toggle chat"
       >
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
