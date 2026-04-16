@@ -54,3 +54,4 @@ export { today, toISODate, parseDate, dayOfWeek, isoWeek, addDays, diffDays, for
 export { formatOutput } from './utils/output.js';
 export { ensureInitialized } from './utils/guard.js';
 export { getPlannerDir, getDbPath, getConfigPath } from './utils/paths.js';
+export { normalizeUsername } from './utils/identity.js';

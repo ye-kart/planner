@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import type { DB } from './connection.js';
 import { generateId } from '../utils/id.js';
+import { normalizeUsername } from '../utils/identity.js';
 import { today } from '../utils/date.js';
 
 const STATEMENTS = [
@@ -129,8 +130,16 @@ export function runMigrations(db: DB): void {
   // Backfill: create a default space and assign orphaned rows
   backfillDefaultSpace(db);
 
+  // Normalize any pre-existing allowlist rows (idempotent: LOWER + TRIM + strip leading @)
+  normalizeAllowedUsers(db);
+
   // Seed allowed_users from env vars if table is empty
   seedAllowedUsersFromEnv(db);
+}
+
+function normalizeAllowedUsers(db: DB): void {
+  db.run(sql`UPDATE allowed_users SET username = LOWER(TRIM(username)) WHERE username != LOWER(TRIM(username))`);
+  db.run(sql`UPDATE allowed_users SET username = SUBSTR(username, 2) WHERE username LIKE '@%'`);
 }
 
 function seedAllowedUsersFromEnv(db: DB): void {
@@ -140,7 +149,7 @@ function seedAllowedUsersFromEnv(db: DB): void {
   const now = new Date().toISOString();
 
   // Seed GitHub users
-  const githubUsers = (process.env.PLANNER_ALLOWED_GITHUB_USERS ?? '').split(',').map(u => u.trim()).filter(Boolean);
+  const githubUsers = (process.env.PLANNER_ALLOWED_GITHUB_USERS ?? '').split(',').map(normalizeUsername).filter(Boolean);
   for (let i = 0; i < githubUsers.length; i++) {
     const id = generateId();
     const isAdmin = i === 0 ? 1 : 0; // First user is admin
@@ -148,7 +157,7 @@ function seedAllowedUsersFromEnv(db: DB): void {
   }
 
   // Seed Google emails
-  const googleEmails = (process.env.PLANNER_ALLOWED_GOOGLE_EMAILS ?? '').split(',').map(e => e.trim()).filter(Boolean);
+  const googleEmails = (process.env.PLANNER_ALLOWED_GOOGLE_EMAILS ?? '').split(',').map(normalizeUsername).filter(Boolean);
   for (const email of googleEmails) {
     const id = generateId();
     const isAdmin = githubUsers.length === 0 ? 1 : 0; // Admin if no GitHub users were added

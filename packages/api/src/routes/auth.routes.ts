@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { generateId } from '@planner/core';
+import { generateId, normalizeUsername } from '@planner/core';
 import type { ApiContainer } from '../container.js';
 
 export function createAuthRoutes(container: ApiContainer): Hono {
@@ -51,13 +51,15 @@ export function createAuthRoutes(container: ApiContainer): Hono {
       return c.json({ error: 'Failed to get user info' }, 400);
     }
 
+    const login = normalizeUsername(user.login);
+
     // Check allowlist (database)
-    if (!allowedUserRepo.isAllowed('github', user.login)) {
+    if (!allowedUserRepo.isAllowed('github', login)) {
       return c.json({ error: 'User not authorized' }, 403);
     }
 
     // Create session
-    const session = createSession(sessionRepo, `github:${user.login}`);
+    const session = createSession(sessionRepo, `github:${login}`);
     const secure = c.req.header('x-forwarded-proto') === 'https' ? '; Secure' : '';
     c.header('Set-Cookie', `session=${session.id}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${30 * 24 * 60 * 60}${secure}`);
     return c.redirect('/');
@@ -117,13 +119,15 @@ export function createAuthRoutes(container: ApiContainer): Hono {
       return c.json({ error: 'Failed to get user info' }, 400);
     }
 
+    const email = normalizeUsername(user.email);
+
     // Check allowlist (database)
-    if (!allowedUserRepo.isAllowed('google', user.email)) {
+    if (!allowedUserRepo.isAllowed('google', email)) {
       return c.json({ error: 'User not authorized' }, 403);
     }
 
     // Create session
-    const session = createSession(sessionRepo, `google:${user.email}`);
+    const session = createSession(sessionRepo, `google:${email}`);
     const secure = c.req.header('x-forwarded-proto') === 'https' ? '; Secure' : '';
     c.header('Set-Cookie', `session=${session.id}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${30 * 24 * 60 * 60}${secure}`);
     return c.redirect('/');
@@ -155,7 +159,7 @@ export function createAuthRoutes(container: ApiContainer): Hono {
       return c.json({ authenticated: false });
     }
     const [provider, username] = session.userId.split(':');
-    const isAdmin = provider && username ? allowedUserRepo.isAdmin(provider, username) : false;
+    const isAdmin = provider && username ? allowedUserRepo.isAdmin(provider, normalizeUsername(username)) : false;
     return c.json({ authenticated: true, userId: session.userId, isAdmin });
   });
 
