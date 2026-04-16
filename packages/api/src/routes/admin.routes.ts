@@ -1,5 +1,5 @@
 import { Hono, type Context } from 'hono';
-import { generateId } from '@planner/core';
+import { generateId, normalizeUsername } from '@planner/core';
 import type { ApiContainer } from '../container.js';
 
 export function createAdminRoutes(container: ApiContainer): Hono {
@@ -12,7 +12,7 @@ export function createAdminRoutes(container: ApiContainer): Hono {
     if (!userId) return c.json({ error: 'Unauthorized' }, 401);
 
     const [provider, username] = userId.split(':');
-    if (!provider || !username || !allowedUserRepo.isAdmin(provider, username)) {
+    if (!provider || !username || !allowedUserRepo.isAdmin(provider, normalizeUsername(username))) {
       return c.json({ error: 'Admin access required' }, 403);
     }
     await next();
@@ -28,7 +28,7 @@ export function createAdminRoutes(container: ApiContainer): Hono {
   app.post('/allowed-users', async (c) => {
     const body = await c.req.json() as { provider?: string; username?: string };
     const provider = body.provider ?? 'github';
-    const username = body.username?.trim();
+    const username = body.username ? normalizeUsername(body.username) : '';
 
     if (!username) {
       return c.json({ error: 'Username is required' }, 400);
