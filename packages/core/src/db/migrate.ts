@@ -105,9 +105,11 @@ const STATEMENTS = [
     user_id TEXT PRIMARY KEY,
     trial_started_at TEXT NOT NULL,
     trial_expires_at TEXT NOT NULL,
-    subscription_status TEXT NOT NULL DEFAULT 'trial' CHECK(subscription_status IN ('trial', 'active', 'expired', 'cancelled')),
+    subscription_status TEXT NOT NULL DEFAULT 'trial' CHECK(subscription_status IN ('trial', 'active', 'expired', 'cancelled', 'past_due')),
     plan TEXT CHECK(plan IN ('monthly', 'yearly')),
     subscription_expires_at TEXT,
+    stripe_customer_id TEXT,
+    stripe_subscription_id TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
   )`,
@@ -121,6 +123,8 @@ const ALTERS = [
   `ALTER TABLE tasks ADD COLUMN space_id TEXT REFERENCES spaces(id) ON DELETE CASCADE`,
   `ALTER TABLE habits ADD COLUMN space_id TEXT REFERENCES spaces(id) ON DELETE CASCADE`,
   `ALTER TABLE conversations ADD COLUMN space_id TEXT REFERENCES spaces(id) ON DELETE CASCADE`,
+  `ALTER TABLE user_trials ADD COLUMN stripe_customer_id TEXT`,
+  `ALTER TABLE user_trials ADD COLUMN stripe_subscription_id TEXT`,
 ];
 
 export function runMigrations(db: DB): void {

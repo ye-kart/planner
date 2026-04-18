@@ -12,6 +12,7 @@ import { LoginPage } from './pages/login';
 import { SpacesPage } from './pages/spaces';
 import { AdminPage } from './pages/admin';
 import { SubscribePage } from './pages/subscribe';
+import { SubscribeSuccessPage } from './pages/subscribe-success';
 import { useKeyboard } from './hooks/use-keyboard';
 
 const queryClient = new QueryClient({
@@ -34,6 +35,7 @@ export function App() {
           <Route path="/spaces/manage" element={<SpacesPage />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/subscribe" element={<SubscribePage />} />
+          <Route path="/subscribe/success" element={<SubscribeSuccessPage />} />
           <Route path="/" element={<SpaceRedirect />} />
           <Route path="/spaces/:spaceId" element={<SpaceProvider><KeyboardProvider><AppLayout /></KeyboardProvider></SpaceProvider>}>
             <Route index element={<DashboardPage />} />

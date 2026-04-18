@@ -366,14 +366,31 @@ Works with any OpenAI-compatible API, including Ollama — see [Configuration](#
 
 #### Free trial & subscriptions (web app)
 
-New users get **7 days of free AI access** on their first login. When the trial runs out, AI chat returns `402 Payment Required` and the UI prompts the user to subscribe. Planned pricing: **€1/month** or **€10/year** for unlimited AI usage. Admins (users marked `is_admin=1` in `allowed_users`) always bypass the gate.
+New users get **7 days of free AI access** on their first login. When the trial runs out, AI chat returns `402 Payment Required` and the UI prompts the user to subscribe. Pricing: **€1/month** or **€10/year** for unlimited AI usage. Admins (users marked `is_admin=1` in `allowed_users`) always bypass the gate.
 
-Endpoints:
+**Endpoints:**
 
 - `GET /api/auth/me` — includes `trial` state (`trial` / `trial_expired` / `active` / `admin`) and days remaining
 - `GET /api/auth/trial` — standalone trial status
+- `POST /api/billing/checkout` — body `{ plan: 'monthly' | 'yearly' }` → `{ url }` (Stripe Checkout)
+- `POST /api/billing/portal` → `{ url }` (Stripe Customer Portal — cancel, update card)
+- `POST /api/billing/webhook` — Stripe event sink (verifies `stripe-signature`)
+- `GET  /api/billing/status` — `{ configured: boolean }`
+- `GET  /api/billing/self` — current user's subscription summary
 
-Payment processing is not yet wired up — the trial ships first so the full login→use→paywall flow can be exercised end-to-end before money moves.
+**Stripe setup:**
+
+1. In the [Stripe Dashboard](https://dashboard.stripe.com/) create one Product with two recurring Prices: €1/month and €10/year. Copy both `price_…` IDs.
+2. Set env vars: `PLANNER_STRIPE_SECRET_KEY`, `PLANNER_STRIPE_PRICE_MONTHLY`, `PLANNER_STRIPE_PRICE_YEARLY`.
+3. Add a Webhook endpoint pointing at `https://<your-host>/api/billing/webhook`, subscribed to:
+   - `checkout.session.completed`
+   - `customer.subscription.updated`
+   - `customer.subscription.deleted`
+   - `invoice.payment_failed`
+4. Copy the endpoint's signing secret (`whsec_…`) into `PLANNER_STRIPE_WEBHOOK_SECRET`.
+5. For local testing: `stripe login && stripe listen --forward-to localhost:3000/api/billing/webhook` — the CLI prints a `whsec_…` to use as your dev webhook secret.
+
+If any of the four Stripe env vars are missing, the billing service is disabled, `/subscribe` shows a "Payments not configured" banner, and the buttons are non-interactive. The trial gate still works without Stripe — it just can't be escaped via payment.
 
 ## JSON output
 
@@ -441,6 +458,10 @@ When `PLANNER_GITHUB_CLIENT_ID` is set, the web app requires GitHub OAuth login.
 | `PLANNER_GITHUB_CLIENT_ID` | — | GitHub OAuth app client ID (enables web auth) |
 | `PLANNER_GITHUB_CLIENT_SECRET` | — | GitHub OAuth app client secret |
 | `PLANNER_ALLOWED_GITHUB_USERS` | — | Comma-separated GitHub usernames allowed to log in |
+| `PLANNER_STRIPE_SECRET_KEY` | — | Stripe secret key (`sk_live_…` or `sk_test_…`) — enables billing |
+| `PLANNER_STRIPE_WEBHOOK_SECRET` | — | Stripe webhook endpoint signing secret (`whsec_…`) |
+| `PLANNER_STRIPE_PRICE_MONTHLY` | — | Stripe recurring **Price ID** for the €1/month plan |
+| `PLANNER_STRIPE_PRICE_YEARLY` | — | Stripe recurring **Price ID** for the €10/year plan |
 | `PORT` | `3000` | API server port |
 
 The database is a single SQLite file at `$PLANNER_HOME/planner.db`.

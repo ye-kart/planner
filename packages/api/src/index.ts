@@ -14,6 +14,7 @@ import { createChatRoutes } from './routes/chat.routes.js';
 import { createAuthRoutes } from './routes/auth.routes.js';
 import { createSpacesRoutes } from './routes/spaces.routes.js';
 import { createAdminRoutes } from './routes/admin.routes.js';
+import { createBillingRoutes } from './routes/billing.routes.js';
 
 interface CreateAppOptions {
   container?: ApiContainer;
@@ -42,11 +43,18 @@ export function createApp(options?: CreateAppOptions) {
   const authContainer = createApiContainerForSpace(db, '__auth__');
   app.route('/api/auth', createAuthRoutes(authContainer));
 
+  // --- Billing routes — registered BEFORE auth middleware. The webhook is
+  // verified by Stripe signature; /checkout and /portal validate the session
+  // cookie themselves via a fallback in the handler. ---
+  const billingRoutes = createBillingRoutes(authContainer);
+  app.route('/api/billing', billingRoutes);
+
   // Auth middleware for all other API routes
   if (process.env.PLANNER_GITHUB_CLIENT_ID || process.env.PLANNER_GOOGLE_CLIENT_ID) {
     const authMiddleware = createAuthMiddleware(authContainer);
     app.use('/api/*', async (c, next) => {
       if (c.req.path.startsWith('/api/auth')) return next();
+      if (c.req.path.startsWith('/api/billing')) return next();
       return authMiddleware(c, next);
     });
   }
@@ -92,6 +100,7 @@ function createAppWithFixedContainer(app: Hono, container: ApiContainer, db: DB)
 }
 
 export { createApiContainer, createApiContainerForSpace, type ApiContainer } from './container.js';
+export { BillingService, readBillingConfig, type BillingConfig, type Plan } from './services/billing.service.js';
 export { createAreasRoutes } from './routes/areas.routes.js';
 export { createGoalsRoutes } from './routes/goals.routes.js';
 export { createTasksRoutes } from './routes/tasks.routes.js';

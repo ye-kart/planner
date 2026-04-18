@@ -8,6 +8,7 @@ import {
   TrialService,
   type DB,
 } from '@planner/core';
+import { BillingService, readBillingConfig } from './services/billing.service.js';
 
 export interface ApiContainer extends AiContainer {
   sessionRepo: SessionRepository;
@@ -15,6 +16,7 @@ export interface ApiContainer extends AiContainer {
   userTrialRepo: UserTrialRepository;
   trialService: TrialService;
   spaceService: SpaceService;
+  billingService: BillingService | null;
 }
 
 export function createApiContainer(): ApiContainer {
@@ -31,5 +33,18 @@ export function createApiContainerForSpace(db: DB, spaceId: string): ApiContaine
   const spaceRepo = new SpaceRepository(db);
   const spaceService = new SpaceService(spaceRepo);
 
-  return { ...ai, sessionRepo, allowedUserRepo, userTrialRepo, trialService, spaceService };
+  const billingConfig = readBillingConfig();
+  const billingService = billingConfig
+    ? new BillingService(userTrialRepo, billingConfig)
+    : null;
+
+  return {
+    ...ai,
+    sessionRepo,
+    allowedUserRepo,
+    userTrialRepo,
+    trialService,
+    spaceService,
+    billingService,
+  };
 }

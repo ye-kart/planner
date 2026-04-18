@@ -1,8 +1,22 @@
 import { Link } from 'react-router-dom';
-import { useTrial } from '../hooks/use-api';
+import {
+  useTrial,
+  useBillingStatus,
+  useBillingSelf,
+  useStartCheckout,
+  useOpenPortal,
+} from '../hooks/use-api';
 
 export function SubscribePage() {
   const { data: trial } = useTrial();
+  const { data: billing } = useBillingStatus();
+  const { data: self } = useBillingSelf();
+  const checkout = useStartCheckout();
+  const portal = useOpenPortal();
+
+  const billingConfigured = !!billing?.configured;
+  const hasActiveSub = self?.subscriptionStatus === 'active';
+  const busy = checkout.isPending || portal.isPending;
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text-primary)] px-4 py-10">
@@ -18,13 +32,33 @@ export function SubscribePage() {
             Keep using Planner AI
           </h1>
           <p className="text-[var(--color-text-secondary)]">
-            {trial?.state === 'trial_expired'
-              ? 'Your 7-day free trial has ended. Pick a plan to continue using the AI assistant.'
-              : trial?.state === 'active'
-                ? 'You have an active subscription. Thank you for supporting Planner!'
-                : `You're on the free trial — ${trial?.daysRemaining ?? 0} day${trial?.daysRemaining === 1 ? '' : 's'} left. You can subscribe any time.`}
+            {headlineFor(trial?.state, trial?.daysRemaining ?? 0)}
           </p>
         </header>
+
+        {self?.hasStripeCustomer && (
+          <section className="rounded border border-[var(--color-border)] bg-[var(--color-bg-panel)] p-4 flex items-center justify-between gap-4">
+            <div className="text-sm">
+              <p className="font-medium text-[var(--color-text-primary)]">
+                Subscription: {self.subscriptionStatus ?? 'unknown'}
+                {self.plan ? ` · ${self.plan}` : ''}
+              </p>
+              {self.subscriptionExpiresAt && (
+                <p className="text-[var(--color-text-secondary)]">
+                  Renews / ends:{' '}
+                  {new Date(self.subscriptionExpiresAt).toLocaleDateString()}
+                </p>
+              )}
+            </div>
+            <button
+              onClick={() => portal.mutate()}
+              disabled={busy}
+              className="px-3 py-2 rounded border border-[var(--color-border)] hover:border-[var(--color-border-active)] text-sm disabled:opacity-50"
+            >
+              Manage subscription
+            </button>
+          </section>
+        )}
 
         <section className="grid gap-4 md:grid-cols-2">
           <PlanCard
@@ -33,6 +67,8 @@ export function SubscribePage() {
             cadence="per month"
             highlight={false}
             description="Flexibility to cancel any time."
+            disabled={!billingConfigured || hasActiveSub || busy}
+            onClick={() => checkout.mutate('monthly')}
           />
           <PlanCard
             title="Yearly"
@@ -40,22 +76,42 @@ export function SubscribePage() {
             cadence="per year"
             highlight={true}
             description="Save ~17% vs. monthly billing."
+            disabled={!billingConfigured || hasActiveSub || busy}
+            onClick={() => checkout.mutate('yearly')}
           />
         </section>
 
-        <section className="rounded border border-[var(--color-border)] bg-[var(--color-bg-panel)] p-4 text-sm text-[var(--color-text-secondary)]">
-          <p className="font-medium text-[var(--color-text-primary)] mb-1">
-            Payments coming soon
-          </p>
-          <p>
-            We&apos;re rolling out the trial first so you can try the AI
-            assistant end-to-end. Payment processing will be enabled shortly —
-            your access won&apos;t be interrupted during the switch-over.
-          </p>
-        </section>
+        {!billingConfigured && (
+          <section className="rounded border border-[var(--color-warning)]/40 bg-[var(--color-warning)]/10 p-4 text-sm text-[var(--color-text-primary)]">
+            <p className="font-medium mb-1">Payments not configured yet</p>
+            <p className="text-[var(--color-text-secondary)]">
+              Stripe env vars haven&apos;t been set on this deployment. Once an
+              admin adds them, the buttons above become live.
+            </p>
+          </section>
+        )}
+
+        {(checkout.isError || portal.isError) && (
+          <section className="rounded border border-[var(--color-error)]/40 bg-[var(--color-error)]/10 p-4 text-sm text-[var(--color-error)]">
+            {checkout.error instanceof Error
+              ? checkout.error.message
+              : portal.error instanceof Error
+                ? portal.error.message
+                : 'Something went wrong.'}
+          </section>
+        )}
       </div>
     </div>
   );
+}
+
+function headlineFor(state: string | undefined, days: number): string {
+  if (state === 'trial_expired')
+    return 'Your 7-day free trial has ended. Pick a plan to continue using the AI assistant.';
+  if (state === 'active')
+    return 'You have an active subscription. Thank you for supporting Planner!';
+  if (state === 'admin') return 'You are an admin — AI access is unlimited.';
+  return `You're on the free trial — ${days} day${days === 1 ? '' : 's'} left. You can subscribe any time.`;
 }
 
 interface PlanCardProps {
@@ -64,9 +120,19 @@ interface PlanCardProps {
   cadence: string;
   description: string;
   highlight: boolean;
+  disabled: boolean;
+  onClick: () => void;
 }
 
-function PlanCard({ title, price, cadence, description, highlight }: PlanCardProps) {
+function PlanCard({
+  title,
+  price,
+  cadence,
+  description,
+  highlight,
+  disabled,
+  onClick,
+}: PlanCardProps) {
   return (
     <div
       className={`rounded border p-5 flex flex-col gap-3 ${
@@ -95,10 +161,11 @@ function PlanCard({ title, price, cadence, description, highlight }: PlanCardPro
       </div>
       <p className="text-sm text-[var(--color-text-secondary)]">{description}</p>
       <button
-        disabled
-        className="mt-2 px-3 py-2 rounded bg-[var(--color-accent-1)] text-[var(--color-bg)] font-medium opacity-60 cursor-not-allowed"
+        onClick={onClick}
+        disabled={disabled}
+        className="mt-2 px-3 py-2 rounded bg-[var(--color-accent-1)] text-[var(--color-bg)] font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        Subscribe (coming soon)
+        {disabled ? 'Unavailable' : 'Subscribe'}
       </button>
     </div>
   );

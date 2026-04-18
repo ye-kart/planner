@@ -9,6 +9,10 @@ export class UserTrialRepository {
     return this.db.select().from(userTrials).where(eq(userTrials.userId, userId)).get();
   }
 
+  findByStripeCustomerId(stripeCustomerId: string): UserTrial | undefined {
+    return this.db.select().from(userTrials).where(eq(userTrials.stripeCustomerId, stripeCustomerId)).get();
+  }
+
   create(data: NewUserTrial): UserTrial {
     this.db.insert(userTrials).values(data).run();
     return this.findByUserId(data.userId)!;

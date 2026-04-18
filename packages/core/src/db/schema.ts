@@ -112,10 +112,12 @@ export const userTrials = sqliteTable('user_trials', {
   trialStartedAt: text('trial_started_at').notNull(),
   trialExpiresAt: text('trial_expires_at').notNull(),
   subscriptionStatus: text('subscription_status', {
-    enum: ['trial', 'active', 'expired', 'cancelled'],
+    enum: ['trial', 'active', 'expired', 'cancelled', 'past_due'],
   }).notNull().default('trial'),
   plan: text('plan', { enum: ['monthly', 'yearly'] }),
   subscriptionExpiresAt: text('subscription_expires_at'),
+  stripeCustomerId: text('stripe_customer_id'),
+  stripeSubscriptionId: text('stripe_subscription_id'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
 });

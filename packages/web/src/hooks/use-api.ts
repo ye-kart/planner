@@ -6,6 +6,7 @@ import { tasksApi } from '../api/tasks.api';
 import { habitsApi } from '../api/habits.api';
 import { statusApi } from '../api/status.api';
 import { authApi } from '../api/auth.api';
+import { billingApi } from '../api/billing.api';
 import { useCurrentSpace } from '../contexts/space-context';
 
 // --- Auth / trial ---
@@ -15,6 +16,33 @@ export function useAuthMe() {
 
 export function useTrial() {
   return useQuery({ queryKey: ['auth', 'trial'], queryFn: authApi.trial, staleTime: 60_000 });
+}
+
+// --- Billing ---
+export function useBillingStatus() {
+  return useQuery({ queryKey: ['billing', 'status'], queryFn: billingApi.status, staleTime: 5 * 60_000 });
+}
+
+export function useBillingSelf() {
+  return useQuery({ queryKey: ['billing', 'self'], queryFn: billingApi.self, staleTime: 30_000 });
+}
+
+export function useStartCheckout() {
+  return useMutation({
+    mutationFn: billingApi.checkout,
+    onSuccess: ({ url }) => {
+      window.location.href = url;
+    },
+  });
+}
+
+export function useOpenPortal() {
+  return useMutation({
+    mutationFn: billingApi.portal,
+    onSuccess: ({ url }) => {
+      window.location.href = url;
+    },
+  });
 }
 
 // --- Spaces (unscoped) ---
