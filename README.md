@@ -364,6 +364,17 @@ Supported file types: `.md`, `.txt`, `.json`, `.csv`, `.yaml`, `.yml`
 
 Works with any OpenAI-compatible API, including Ollama — see [Configuration](#configuration) for env vars.
 
+#### Free trial & subscriptions (web app)
+
+New users get **7 days of free AI access** on their first login. When the trial runs out, AI chat returns `402 Payment Required` and the UI prompts the user to subscribe. Planned pricing: **€1/month** or **€10/year** for unlimited AI usage. Admins (users marked `is_admin=1` in `allowed_users`) always bypass the gate.
+
+Endpoints:
+
+- `GET /api/auth/me` — includes `trial` state (`trial` / `trial_expired` / `active` / `admin`) and days remaining
+- `GET /api/auth/trial` — standalone trial status
+
+Payment processing is not yet wired up — the trial ships first so the full login→use→paywall flow can be exercised end-to-end before money moves.
+
 ## JSON output
 
 Every command (except `context`, which is always JSON) supports `--json`:

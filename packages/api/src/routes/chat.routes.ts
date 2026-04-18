@@ -9,8 +9,13 @@ export function createChatRoutes(getContainer: ContainerGetter): Hono {
   const app = new Hono();
 
   app.get('/configured', (c) => {
-    const { chatService } = getContainer(c);
-    return c.json({ configured: chatService.isConfigured() });
+    const { chatService, trialService } = getContainer(c);
+    const userId = (c as { get: (key: string) => unknown }).get('userId') as string | undefined;
+    const trial = userId ? trialService.getStatus(userId) : null;
+    return c.json({
+      configured: chatService.isConfigured(),
+      trial,
+    });
   });
 
   app.get('/conversations', (c) => {
@@ -45,7 +50,20 @@ export function createChatRoutes(getContainer: ContainerGetter): Hono {
   });
 
   app.post('/conversations/:id/messages', (c) => {
-    const { chatService } = getContainer(c);
+    const { chatService, trialService } = getContainer(c);
+    const userId = (c as { get: (key: string) => unknown }).get('userId') as string | undefined;
+    if (userId) {
+      const status = trialService.getStatus(userId);
+      if (!status.hasAiAccess) {
+        return c.json(
+          {
+            error: 'Trial expired. Please subscribe to continue using AI features.',
+            trial: status,
+          },
+          402
+        );
+      }
+    }
     return streamSSE(c, async (stream) => {
       let body: { message: string; currentScreen?: string };
       try {

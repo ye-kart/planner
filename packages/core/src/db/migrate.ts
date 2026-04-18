@@ -101,6 +101,16 @@ const STATEMENTS = [
     is_admin INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL
   )`,
+  `CREATE TABLE IF NOT EXISTS user_trials (
+    user_id TEXT PRIMARY KEY,
+    trial_started_at TEXT NOT NULL,
+    trial_expires_at TEXT NOT NULL,
+    subscription_status TEXT NOT NULL DEFAULT 'trial' CHECK(subscription_status IN ('trial', 'active', 'expired', 'cancelled')),
+    plan TEXT CHECK(plan IN ('monthly', 'yearly')),
+    subscription_expires_at TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  )`,
 ];
 
 // ALTER statements for migrating existing databases that lack the space_id column.

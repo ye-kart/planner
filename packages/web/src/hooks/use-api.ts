@@ -5,7 +5,17 @@ import { goalsApi } from '../api/goals.api';
 import { tasksApi } from '../api/tasks.api';
 import { habitsApi } from '../api/habits.api';
 import { statusApi } from '../api/status.api';
+import { authApi } from '../api/auth.api';
 import { useCurrentSpace } from '../contexts/space-context';
+
+// --- Auth / trial ---
+export function useAuthMe() {
+  return useQuery({ queryKey: ['auth', 'me'], queryFn: authApi.me, staleTime: 60_000 });
+}
+
+export function useTrial() {
+  return useQuery({ queryKey: ['auth', 'trial'], queryFn: authApi.trial, staleTime: 60_000 });
+}
 
 // --- Spaces (unscoped) ---
 export function useSpaces() {

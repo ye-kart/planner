@@ -17,6 +17,7 @@ export type {
   Message, NewMessage,
   Session, NewSession,
   AllowedUser, NewAllowedUser,
+  UserTrial, NewUserTrial,
 } from './db/schema.js';
 
 // Repositories
@@ -31,6 +32,7 @@ export { ConversationRepository } from './repositories/conversation.repository.j
 export { MessageRepository } from './repositories/message.repository.js';
 export { SessionRepository } from './repositories/session.repository.js';
 export { AllowedUserRepository } from './repositories/allowed-user.repository.js';
+export { UserTrialRepository } from './repositories/user-trial.repository.js';
 
 // Services
 export { SpaceService } from './services/space.service.js';
@@ -43,6 +45,7 @@ export { StatusService, type StatusData } from './services/status.service.js';
 export { ConfigService, type ChatConfig } from './services/config.service.js';
 export { ExportService } from './services/export.service.js';
 export { InitService } from './services/init.service.js';
+export { TrialService, TRIAL_DURATION_DAYS, type TrialStatus, type TrialStatusState } from './services/trial.service.js';
 export { calculateStreaks, type StreakResult } from './services/streak.js';
 
 // Container

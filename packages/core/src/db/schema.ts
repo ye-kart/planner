@@ -107,6 +107,19 @@ export const allowedUsers = sqliteTable('allowed_users', {
   createdAt: text('created_at').notNull(),
 });
 
+export const userTrials = sqliteTable('user_trials', {
+  userId: text('user_id').primaryKey(),
+  trialStartedAt: text('trial_started_at').notNull(),
+  trialExpiresAt: text('trial_expires_at').notNull(),
+  subscriptionStatus: text('subscription_status', {
+    enum: ['trial', 'active', 'expired', 'cancelled'],
+  }).notNull().default('trial'),
+  plan: text('plan', { enum: ['monthly', 'yearly'] }),
+  subscriptionExpiresAt: text('subscription_expires_at'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+});
+
 // Type exports
 export type Space = typeof spaces.$inferSelect;
 export type NewSpace = typeof spaces.$inferInsert;
@@ -130,3 +143,5 @@ export type Session = typeof sessions.$inferSelect;
 export type NewSession = typeof sessions.$inferInsert;
 export type AllowedUser = typeof allowedUsers.$inferSelect;
 export type NewAllowedUser = typeof allowedUsers.$inferInsert;
+export type UserTrial = typeof userTrials.$inferSelect;
+export type NewUserTrial = typeof userTrials.$inferInsert;
