@@ -11,6 +11,7 @@ import { HabitsPage } from './pages/habits';
 import { LoginPage } from './pages/login';
 import { SpacesPage } from './pages/spaces';
 import { AdminPage } from './pages/admin';
+import { SubscribePage } from './pages/subscribe';
 import { useKeyboard } from './hooks/use-keyboard';
 
 const queryClient = new QueryClient({
@@ -32,6 +33,7 @@ export function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/spaces/manage" element={<SpacesPage />} />
           <Route path="/admin" element={<AdminPage />} />
+          <Route path="/subscribe" element={<SubscribePage />} />
           <Route path="/" element={<SpaceRedirect />} />
           <Route path="/spaces/:spaceId" element={<SpaceProvider><KeyboardProvider><AppLayout /></KeyboardProvider></SpaceProvider>}>
             <Route index element={<DashboardPage />} />

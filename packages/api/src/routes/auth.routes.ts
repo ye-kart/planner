@@ -4,7 +4,7 @@ import type { ApiContainer } from '../container.js';
 
 export function createAuthRoutes(container: ApiContainer): Hono {
   const app = new Hono();
-  const { sessionRepo, allowedUserRepo } = container;
+  const { sessionRepo, allowedUserRepo, trialService } = container;
 
   const githubClientId = process.env.PLANNER_GITHUB_CLIENT_ID;
   const githubClientSecret = process.env.PLANNER_GITHUB_CLIENT_SECRET;
@@ -58,8 +58,11 @@ export function createAuthRoutes(container: ApiContainer): Hono {
       return c.json({ error: 'User not authorized' }, 403);
     }
 
+    const userId = `github:${login}`;
+    trialService.ensureTrial(userId);
+
     // Create session
-    const session = createSession(sessionRepo, `github:${login}`);
+    const session = createSession(sessionRepo, userId);
     const secure = c.req.header('x-forwarded-proto') === 'https' ? '; Secure' : '';
     c.header('Set-Cookie', `session=${session.id}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${30 * 24 * 60 * 60}${secure}`);
     return c.redirect('/');
@@ -126,8 +129,11 @@ export function createAuthRoutes(container: ApiContainer): Hono {
       return c.json({ error: 'User not authorized' }, 403);
     }
 
+    const userId = `google:${email}`;
+    trialService.ensureTrial(userId);
+
     // Create session
-    const session = createSession(sessionRepo, `google:${email}`);
+    const session = createSession(sessionRepo, userId);
     const secure = c.req.header('x-forwarded-proto') === 'https' ? '; Secure' : '';
     c.header('Set-Cookie', `session=${session.id}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${30 * 24 * 60 * 60}${secure}`);
     return c.redirect('/');
@@ -160,7 +166,23 @@ export function createAuthRoutes(container: ApiContainer): Hono {
     }
     const [provider, username] = session.userId.split(':');
     const isAdmin = provider && username ? allowedUserRepo.isAdmin(provider, normalizeUsername(username)) : false;
-    return c.json({ authenticated: true, userId: session.userId, isAdmin });
+
+    // Self-heal: if a legacy session pre-dates the trial table, create one now.
+    trialService.ensureTrial(session.userId);
+    const trial = trialService.getStatus(session.userId);
+
+    return c.json({ authenticated: true, userId: session.userId, isAdmin, trial });
+  });
+
+  app.get('/trial', (c) => {
+    const sessionId = getCookie(c, 'session');
+    if (!sessionId) return c.json({ error: 'Unauthorized' }, 401);
+    const session = sessionRepo.findById(sessionId);
+    if (!session || new Date(session.expiresAt) < new Date()) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+    trialService.ensureTrial(session.userId);
+    return c.json(trialService.getStatus(session.userId));
   });
 
   return app;

@@ -4,14 +4,20 @@ import {
   SessionRepository,
   SpaceRepository,
   SpaceService,
+  AllowedUserRepository,
+  UserTrialRepository,
+  TrialService,
 } from '@planner/core';
-import { ChatService, type AiContainer } from '@planner/ai';
+import { ChatService } from '@planner/ai';
 import { createApp, type ApiContainer } from '@planner/api';
 import { createTestDb, createTestSpace } from '../helpers/db';
 
 export function createTestApiContainer(db: DB, spaceId: string): ApiContainer {
   const core = createTestContainer(db, spaceId);
   const sessionRepo = new SessionRepository(db);
+  const allowedUserRepo = new AllowedUserRepository(db);
+  const userTrialRepo = new UserTrialRepository(db);
+  const trialService = new TrialService(userTrialRepo, allowedUserRepo);
   const spaceRepo = new SpaceRepository(db);
   const spaceService = new SpaceService(spaceRepo);
 
@@ -20,7 +26,7 @@ export function createTestApiContainer(db: DB, spaceId: string): ApiContainer {
     core.areaService, core.goalService, core.taskService, core.habitService, core.contextService,
   );
 
-  return { ...core, chatService, sessionRepo, spaceService };
+  return { ...core, chatService, sessionRepo, allowedUserRepo, userTrialRepo, trialService, spaceService };
 }
 
 export function createTestApp() {

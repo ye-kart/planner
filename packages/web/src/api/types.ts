@@ -113,3 +113,22 @@ export interface Message {
   createdAt: string;
   position: number;
 }
+
+export type TrialStatusState = 'trial' | 'trial_expired' | 'active' | 'admin';
+
+export interface TrialStatus {
+  state: TrialStatusState;
+  trialStartedAt: string | null;
+  trialExpiresAt: string | null;
+  subscriptionExpiresAt: string | null;
+  plan: 'monthly' | 'yearly' | null;
+  daysRemaining: number;
+  hasAiAccess: boolean;
+}
+
+export interface AuthMe {
+  authenticated: boolean;
+  userId?: string;
+  isAdmin?: boolean;
+  trial?: TrialStatus;
+}

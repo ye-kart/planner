@@ -31,6 +31,11 @@ export const chatApi = {
       body: JSON.stringify({ message, currentScreen }),
       signal: controller.signal,
     }).then(async (res) => {
+      if (res.status === 402) {
+        const body = await res.json().catch(() => ({ error: 'Trial expired. Please subscribe to continue.' }));
+        callbacks.onError(body.error ?? 'Trial expired. Please subscribe to continue.');
+        return;
+      }
       if (!res.ok || !res.body) {
         callbacks.onError('Failed to connect to chat');
         return;
