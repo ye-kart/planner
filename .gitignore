@@ -27,6 +27,8 @@ Thumbs.db
 *~
 
 # AI agent configs
+.pi/
+CLAUDE.md
 .claude/
 .cursor/
 .copilot/
