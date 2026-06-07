@@ -1,28 +1,31 @@
 @import "tailwindcss";
 
+/* Static defaults (neon theme) so the app renders correctly before — or if —
+   the runtime applyTheme() in main.tsx sets the :root vars. applyTheme still
+   overrides these on documentElement for live theme switching. */
 @theme {
-  --color-bg: var(--color-bg);
-  --color-bg-panel: var(--color-bg-panel);
-  --color-bg-highlight: var(--color-bg-highlight);
-  --color-text-primary: var(--color-text-primary);
-  --color-text-secondary: var(--color-text-secondary);
-  --color-text-accent: var(--color-text-accent);
-  --color-success: var(--color-success);
-  --color-warning: var(--color-warning);
-  --color-error: var(--color-error);
-  --color-priority-low: var(--color-priority-low);
-  --color-priority-med: var(--color-priority-med);
-  --color-priority-high: var(--color-priority-high);
-  --color-priority-urgent: var(--color-priority-urgent);
-  --color-accent-1: var(--color-accent-1);
-  --color-accent-2: var(--color-accent-2);
-  --color-streak-fire: var(--color-streak-fire);
-  --color-progress-fill: var(--color-progress-fill);
-  --color-progress-track: var(--color-progress-track);
-  --color-border: var(--color-border);
-  --color-border-active: var(--color-border-active);
-  --color-tab-active: var(--color-tab-active);
-  --color-tab-inactive: var(--color-tab-inactive);
+  --color-bg: #0a0a1a;
+  --color-bg-panel: #111128;
+  --color-bg-highlight: #1a1a3e;
+  --color-text-primary: #e0e0ff;
+  --color-text-secondary: #7777aa;
+  --color-text-accent: #00d4ff;
+  --color-success: #00ff88;
+  --color-warning: #ffaa00;
+  --color-error: #ff3366;
+  --color-priority-low: #4488cc;
+  --color-priority-med: #00d4ff;
+  --color-priority-high: #ff6600;
+  --color-priority-urgent: #ff3366;
+  --color-accent-1: #00d4ff;
+  --color-accent-2: #ff44aa;
+  --color-streak-fire: #ff6600;
+  --color-progress-fill: #00d4ff;
+  --color-progress-track: #222244;
+  --color-border: #333366;
+  --color-border-active: #00d4ff;
+  --color-tab-active: #00d4ff;
+  --color-tab-inactive: #9a9ad0;
 }
 
 body {
@@ -32,8 +35,23 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+html,
+body {
+  min-height: 100%;
+  /* Fill overscroll / rubber-band areas with the theme background instead of
+     the user-agent default white, which flashes on these very dark themes. */
+  background: var(--color-bg);
+}
+
 html {
   scroll-behavior: smooth;
+}
+
+/* Visible keyboard-focus indicator (WCAG 2.4.7). The UI is heavily keyboard
+   driven, so every focusable element needs a consistent ring. */
+*:focus-visible {
+  outline: 2px solid var(--color-border-active);
+  outline-offset: 2px;
 }
 
 * {

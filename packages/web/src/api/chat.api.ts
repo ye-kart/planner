@@ -45,45 +45,60 @@ export const chatApi = {
       const decoder = new TextDecoder();
       let buffer = '';
 
+      // Dispatch one complete SSE event block. A block may carry multiple
+      // `data:` lines (server splits a payload's newlines across them); they
+      // must be rejoined with '\n' to reconstruct the original token/text.
+      const dispatch = (block: string) => {
+        let event = '';
+        const dataParts: string[] = [];
+        for (const line of block.split('\n')) {
+          if (line.startsWith('event:')) {
+            event = line.slice(line.startsWith('event: ') ? 7 : 6);
+          } else if (line.startsWith('data:')) {
+            dataParts.push(line.slice(line.startsWith('data: ') ? 6 : 5));
+          }
+        }
+        if (!event) return;
+        const data = dataParts.join('\n');
+
+        switch (event) {
+          case 'token':
+            callbacks.onToken(data);
+            break;
+          case 'tool_call': {
+            const tc = JSON.parse(data);
+            callbacks.onToolCall(tc.name, tc.args);
+            break;
+          }
+          case 'tool_result': {
+            const tr = JSON.parse(data);
+            callbacks.onToolResult(tr.name, tr.result);
+            break;
+          }
+          case 'complete':
+            callbacks.onComplete(data);
+            break;
+          case 'error':
+            callbacks.onError(data);
+            break;
+        }
+      };
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() ?? '';
-
-        for (const line of lines) {
-          if (line.startsWith('event: ')) {
-            const event = line.slice(7);
-            const dataLine = lines[lines.indexOf(line) + 1];
-            if (!dataLine?.startsWith('data: ')) continue;
-            const data = dataLine.slice(6);
-
-            switch (event) {
-              case 'token':
-                callbacks.onToken(data);
-                break;
-              case 'tool_call': {
-                const tc = JSON.parse(data);
-                callbacks.onToolCall(tc.name, tc.args);
-                break;
-              }
-              case 'tool_result': {
-                const tr = JSON.parse(data);
-                callbacks.onToolResult(tr.name, tr.result);
-                break;
-              }
-              case 'complete':
-                callbacks.onComplete(data);
-                break;
-              case 'error':
-                callbacks.onError(data);
-                break;
-            }
-          }
+        // Events are separated by a blank line; everything up to the last
+        // '\n\n' is complete, the remainder stays buffered for the next chunk.
+        let sepIdx: number;
+        while ((sepIdx = buffer.indexOf('\n\n')) !== -1) {
+          const block = buffer.slice(0, sepIdx);
+          buffer = buffer.slice(sepIdx + 2);
+          if (block.trim()) dispatch(block);
         }
       }
+      if (buffer.trim()) dispatch(buffer);
     }).catch((err) => {
       if (err.name !== 'AbortError') {
         callbacks.onError(err.message);

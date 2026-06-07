@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from '../hooks/use-api';
 import { tasksApi } from '../api/tasks.api';
 import { useQueryClient } from '@tanstack/react-query';
+import { useCurrentSpace } from '../contexts/space-context';
 import { useKeyboardStore } from '../stores/keyboard.store';
 import { PriorityBadge } from '../components/shared/priority-badge';
 import { StatusBadge } from '../components/shared/status-badge';
@@ -10,7 +11,21 @@ import { ConfirmDialog } from '../components/shared/confirm-dialog';
 
 const FILTERS = ['all', 'todo', 'in_progress', 'done'] as const;
 
+const PRIORITY_OPTIONS = [
+  { value: 'low', label: 'Low' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'high', label: 'High' },
+  { value: 'urgent', label: 'Urgent' },
+];
+
+/** Local calendar date as YYYY-MM-DD (matches how due dates are entered). */
+function localToday(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 export function TasksPage() {
+  const { spaceId } = useCurrentSpace();
   const [filter, setFilter] = useState<string>('all');
   const filterParam = filter === 'all' ? undefined : filter;
   const { data: tasks, isLoading } = useTasks({ status: filterParam });
@@ -24,6 +39,11 @@ export function TasksPage() {
   const [editId, setEditId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const { inputFocused, overlayOpen } = useKeyboardStore();
+
+  const refreshTasks = () => {
+    qc.invalidateQueries({ queryKey: ['spaces', spaceId, 'tasks'] });
+    qc.invalidateQueries({ queryKey: ['spaces', spaceId, 'status'] });
+  };
 
   useEffect(() => {
     document.querySelector('[data-selected]')?.scrollIntoView({ block: 'nearest' });
@@ -58,15 +78,12 @@ export function TasksPage() {
           break;
         case 'd':
           if (tasks[selectedIdx]) {
-            tasksApi.markDone(tasks[selectedIdx].id).then(() => {
-              qc.invalidateQueries({ queryKey: ['tasks'] });
-              qc.invalidateQueries({ queryKey: ['status'] });
-            });
+            tasksApi.markDone(spaceId, tasks[selectedIdx].id).then(refreshTasks);
           }
           break;
         case 's':
           if (tasks[selectedIdx]) {
-            tasksApi.start(tasks[selectedIdx].id).then(() => qc.invalidateQueries({ queryKey: ['tasks'] }));
+            tasksApi.start(spaceId, tasks[selectedIdx].id).then(refreshTasks);
           }
           break;
         case 'f': case 'F': {
@@ -78,11 +95,12 @@ export function TasksPage() {
     }
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
-  }, [inputFocused, overlayOpen, tasks, selectedIdx, filter, qc]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inputFocused, overlayOpen, tasks, selectedIdx, filter, qc, spaceId]);
 
   if (isLoading) return <div className="text-[var(--color-text-secondary)]">Loading...</div>;
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localToday();
 
   return (
     <div className="space-y-4 max-w-2xl">
@@ -107,13 +125,15 @@ export function TasksPage() {
 
       <InlineForm
         open={showAdd}
+        initialValues={{ priority: 'medium' }}
         fields={[
           { name: 'title', label: 'Title', required: true },
-          { name: 'description', label: 'Description' },
+          { name: 'description', label: 'Description', type: 'textarea' },
+          { name: 'priority', label: 'Priority', type: 'select', options: PRIORITY_OPTIONS },
           { name: 'dueDate', label: 'Due Date', type: 'date' },
         ]}
         onSubmit={(vals) => {
-          createTask.mutate({ title: vals.title, description: vals.description || undefined, dueDate: vals.dueDate || undefined });
+          createTask.mutate({ title: vals.title, description: vals.description || undefined, priority: vals.priority || undefined, dueDate: vals.dueDate || undefined });
           setShowAdd(false);
         }}
         onCancel={() => setShowAdd(false)}
@@ -126,15 +146,17 @@ export function TasksPage() {
           initialValues={{
             title: tasks?.find((t) => t.id === editId)?.title ?? '',
             description: tasks?.find((t) => t.id === editId)?.description ?? '',
+            priority: tasks?.find((t) => t.id === editId)?.priority ?? 'medium',
             dueDate: tasks?.find((t) => t.id === editId)?.dueDate ?? '',
           }}
           fields={[
             { name: 'title', label: 'Title', required: true },
-            { name: 'description', label: 'Description' },
+            { name: 'description', label: 'Description', type: 'textarea' },
+            { name: 'priority', label: 'Priority', type: 'select', options: PRIORITY_OPTIONS },
             { name: 'dueDate', label: 'Due Date', type: 'date' },
           ]}
           onSubmit={(vals) => {
-            updateTask.mutate({ id: editId, title: vals.title, description: vals.description || undefined, dueDate: vals.dueDate || undefined });
+            updateTask.mutate({ id: editId, title: vals.title, description: vals.description || undefined, priority: vals.priority || undefined, dueDate: vals.dueDate || undefined });
             setEditId(null);
           }}
           onCancel={() => setEditId(null)}
@@ -155,13 +177,11 @@ export function TasksPage() {
             >
               <div className="flex items-start gap-3">
                 <button
+                  aria-label={task.status === 'done' ? 'Task done' : 'Mark task done'}
                   onClick={(e) => {
                     e.stopPropagation();
                     if (task.status !== 'done') {
-                      tasksApi.markDone(task.id).then(() => {
-                        qc.invalidateQueries({ queryKey: ['tasks'] });
-                        qc.invalidateQueries({ queryKey: ['status'] });
-                      });
+                      tasksApi.markDone(spaceId, task.id).then(refreshTasks);
                     }
                   }}
                   className={`w-6 h-6 mt-0.5 rounded border-2 flex-shrink-0 flex items-center justify-center text-xs transition-colors ${
@@ -170,7 +190,7 @@ export function TasksPage() {
                       : 'border-[var(--color-border)] hover:border-[var(--color-border-active)]'
                   }`}
                 >
-                  {task.status === 'done' ? '\u2713' : null}
+                  {task.status === 'done' ? '✓' : null}
                 </button>
                 <div className="flex-1 min-w-0">
                   <span className={`text-sm leading-snug ${task.status === 'done' ? 'line-through text-[var(--color-text-secondary)]' : 'text-[var(--color-text-primary)]'}`}>
@@ -185,6 +205,20 @@ export function TasksPage() {
                       </span>
                     )}
                   </div>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setEditId(task.id); }}
+                    className="px-2.5 py-1.5 text-xs rounded border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-accent)] hover:border-[var(--color-border-active)] transition-colors"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setDeleteId(task.id); }}
+                    className="px-2.5 py-1.5 text-xs rounded border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-error)] hover:border-[var(--color-error)] transition-colors"
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
             </div>

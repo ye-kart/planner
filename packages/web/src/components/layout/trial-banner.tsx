@@ -4,7 +4,8 @@ import { useTrial } from '../../hooks/use-api';
 export function TrialBanner() {
   const { data } = useTrial();
   if (!data) return null;
-  if (data.state === 'admin' || data.state === 'active') return null;
+  // 'none' = no/expired session (e.g. auth disabled); show no banner.
+  if (data.state === 'admin' || data.state === 'active' || data.state === 'none') return null;
 
   if (data.state === 'trial_expired') {
     return (

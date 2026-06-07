@@ -1,4 +1,4 @@
-class ApiError extends Error {
+export class ApiError extends Error {
   constructor(public status: number, message: string) {
     super(message);
     this.name = 'ApiError';
@@ -13,7 +13,11 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   });
 
   if (res.status === 401) {
-    window.location.href = '/login';
+    // Advisory auth-status endpoints should degrade gracefully; only a 401 on a
+    // real data request means the session is gone and we should go to /login.
+    if (!path.startsWith('/api/auth/')) {
+      window.location.href = '/login';
+    }
     throw new ApiError(401, 'Unauthorized');
   }
 

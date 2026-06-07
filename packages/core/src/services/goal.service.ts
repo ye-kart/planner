@@ -138,6 +138,9 @@ export class GoalService {
   toggleMilestone(msId: string): Milestone {
     const ms = this.milestoneRepo.findById(msId);
     if (!ms) throw new NotFoundError('Milestone', msId);
+    // milestoneRepo is not space-scoped; confirm the parent goal is in this
+    // space before mutating, so a request can't touch another space's data.
+    if (!this.goalRepo.findById(ms.goalId)) throw new NotFoundError('Milestone', msId);
     const updated = this.milestoneRepo.update(msId, { done: !ms.done })!;
     this.recalcProgress(ms.goalId);
     return updated;
@@ -146,6 +149,7 @@ export class GoalService {
   removeMilestone(msId: string): void {
     const ms = this.milestoneRepo.findById(msId);
     if (!ms) throw new NotFoundError('Milestone', msId);
+    if (!this.goalRepo.findById(ms.goalId)) throw new NotFoundError('Milestone', msId);
     const goalId = ms.goalId;
     this.milestoneRepo.delete(msId);
     this.recalcProgress(goalId);

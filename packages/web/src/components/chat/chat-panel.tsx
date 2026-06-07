@@ -46,8 +46,17 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, streamTokens]);
 
+  // Abort any in-flight stream when the panel unmounts (e.g. closed via 'c' or
+  // the Close button) so its onComplete doesn't fire setState on a dead panel.
+  useEffect(() => {
+    return () => controllerRef.current?.abort();
+  }, []);
+
   async function handleSend() {
     if (!input.trim() || streaming) return;
+
+    // Cancel any prior stream before starting a new one.
+    controllerRef.current?.abort();
 
     let convId = activeConvId;
     if (!convId) {
@@ -98,7 +107,14 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
         <div className="flex gap-2">
           {activeConvId && (
             <button
-              onClick={() => { setActiveConvId(null); setMessages([]); }}
+              onClick={() => {
+                controllerRef.current?.abort();
+                setStreaming(false);
+                setStreamTokens('');
+                setStreamEvents([]);
+                setActiveConvId(null);
+                setMessages([]);
+              }}
               className="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-accent)]"
             >
               New
@@ -171,7 +187,7 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
             }}
             placeholder="Ask the AI..."
             rows={2}
-            className="flex-1 resize-none px-3 py-2 rounded bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text-primary)] text-sm focus:outline-none focus:border-[var(--color-border-active)]"
+            className="flex-1 resize-none px-3 py-2 rounded bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text-primary)] text-sm focus:outline-none focus:border-[var(--color-border-active)] focus-visible:ring-2 focus-visible:ring-[var(--color-border-active)]"
           />
           <button
             onClick={handleSend}

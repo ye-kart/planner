@@ -14,6 +14,8 @@ export function errorHandler(err: Error, c: Context): Response {
   if (err instanceof ChatError) {
     return c.json({ error: err.message }, 502);
   }
+  // Log the real error server-side, but never leak raw internals (SQLite/Drizzle
+  // messages, stack details) to the client.
   console.error('Unhandled error:', err);
-  return c.json({ error: err.message || 'Internal server error' }, 500);
+  return c.json({ error: 'Internal server error' }, 500);
 }

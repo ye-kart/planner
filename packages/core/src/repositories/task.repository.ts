@@ -1,4 +1,4 @@
-import { eq, and, lte, lt, type SQL } from 'drizzle-orm';
+import { eq, ne, and, lte, lt, type SQL } from 'drizzle-orm';
 import { tasks, type Task, type NewTask } from '../db/schema.js';
 import type { DB } from '../db/connection.js';
 
@@ -34,20 +34,21 @@ export class TaskRepository {
   }
 
   findDueBy(date: string): Task[] {
+    // Anything not done counts as outstanding (todo or in_progress).
     return this.db.select().from(tasks)
-      .where(and(eq(tasks.spaceId, this.spaceId), lte(tasks.dueDate, date), eq(tasks.status, 'todo')))
+      .where(and(eq(tasks.spaceId, this.spaceId), lte(tasks.dueDate, date), ne(tasks.status, 'done')))
       .all();
   }
 
   findOverdue(today: string): Task[] {
     return this.db.select().from(tasks)
-      .where(and(eq(tasks.spaceId, this.spaceId), lt(tasks.dueDate, today), eq(tasks.status, 'todo')))
+      .where(and(eq(tasks.spaceId, this.spaceId), lt(tasks.dueDate, today), ne(tasks.status, 'done')))
       .all();
   }
 
   findDueOn(date: string): Task[] {
     return this.db.select().from(tasks)
-      .where(and(eq(tasks.spaceId, this.spaceId), eq(tasks.dueDate, date), eq(tasks.status, 'todo')))
+      .where(and(eq(tasks.spaceId, this.spaceId), eq(tasks.dueDate, date), ne(tasks.status, 'done')))
       .all();
   }
 

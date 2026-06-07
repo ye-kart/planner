@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useThemeStore } from '../../stores/theme.store';
 import { useCurrentSpace } from '../../contexts/space-context';
 import { useSpaces } from '../../hooks/use-api';
@@ -25,9 +25,20 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { themeName, cycleTheme } = useThemeStore();
   const { spaceId } = useCurrentSpace();
   const { data: spaces } = useSpaces();
+  const queryClient = useQueryClient();
   const [spaceSwitcherOpen, setSpaceSwitcherOpen] = useState(false);
 
-  const { data: authMe } = useQuery({ queryKey: ['auth', 'me'], queryFn: () => api.get<{ isAdmin?: boolean }>('/api/auth/me') });
+  const { data: authMe } = useQuery({ queryKey: ['auth', 'me'], queryFn: () => api.get<{ authenticated?: boolean; isAdmin?: boolean }>('/api/auth/me') });
+
+  const handleLogout = async () => {
+    try {
+      await api.post('/api/auth/logout');
+    } finally {
+      queryClient.clear();
+      // Full navigation so the cleared cookie/cache state fully resets.
+      window.location.href = '/login';
+    }
+  };
   const currentSpace = spaces?.find(s => s.id === spaceId);
   const basePath = `/spaces/${spaceId}`;
 
@@ -122,6 +133,15 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           <span className="font-mono mr-2">t</span>
           Theme: {themeName}
         </button>
+        {authMe?.authenticated && (
+          <button
+            onClick={handleLogout}
+            className="w-full text-left text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-error)] transition-colors"
+          >
+            <span className="font-mono mr-2">{'⏻'}</span>
+            Sign out
+          </button>
+        )}
       </div>
     </aside>
   );
