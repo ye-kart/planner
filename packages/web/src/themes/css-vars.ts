@@ -1,6 +1,6 @@
 import type { ColorTokens } from './tokens';
 
-const TOKEN_TO_VAR: Record<keyof ColorTokens, string> = {
+export const TOKEN_TO_VAR: Record<keyof ColorTokens, string> = {
   bg: '--color-bg',
   bgPanel: '--color-bg-panel',
   bgHighlight: '--color-bg-highlight',

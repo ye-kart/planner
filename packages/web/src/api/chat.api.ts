@@ -1,4 +1,5 @@
 import { api } from './client';
+import { createSSEParser } from './sse';
 import type { Conversation, Message } from './types';
 
 export const chatApi = {
@@ -43,24 +44,8 @@ export const chatApi = {
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
-      let buffer = '';
 
-      // Dispatch one complete SSE event block. A block may carry multiple
-      // `data:` lines (server splits a payload's newlines across them); they
-      // must be rejoined with '\n' to reconstruct the original token/text.
-      const dispatch = (block: string) => {
-        let event = '';
-        const dataParts: string[] = [];
-        for (const line of block.split('\n')) {
-          if (line.startsWith('event:')) {
-            event = line.slice(line.startsWith('event: ') ? 7 : 6);
-          } else if (line.startsWith('data:')) {
-            dataParts.push(line.slice(line.startsWith('data: ') ? 6 : 5));
-          }
-        }
-        if (!event) return;
-        const data = dataParts.join('\n');
-
+      const parser = createSSEParser((event, data) => {
         switch (event) {
           case 'token':
             callbacks.onToken(data);
@@ -82,23 +67,13 @@ export const chatApi = {
             callbacks.onError(data);
             break;
         }
-      };
+      });
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        // Events are separated by a blank line; everything up to the last
-        // '\n\n' is complete, the remainder stays buffered for the next chunk.
-        let sepIdx: number;
-        while ((sepIdx = buffer.indexOf('\n\n')) !== -1) {
-          const block = buffer.slice(0, sepIdx);
-          buffer = buffer.slice(sepIdx + 2);
-          if (block.trim()) dispatch(block);
-        }
+        parser.write(decoder.decode(value, { stream: true }));
       }
-      if (buffer.trim()) dispatch(buffer);
     }).catch((err) => {
       if (err.name !== 'AbortError') {
         callbacks.onError(err.message);

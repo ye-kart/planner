@@ -23,10 +23,21 @@ function daysToInput(days: string | null | undefined): string {
 }
 
 function inputToDays(s: string): number[] {
-  return s
+  const days = s
     .split(',')
     .map((x) => parseInt(x.trim(), 10))
     .filter((n) => !isNaN(n) && n >= 0 && n <= 6);
+  return [...new Set(days)];
+}
+
+/** A specific_days habit with no (or garbage) days would never be due. */
+function validateHabit(vals: Record<string, string>): string | null {
+  if ((vals.frequency || 'daily') !== 'specific_days') return null;
+  const tokens = (vals.days ?? '').split(',').map((t) => t.trim()).filter(Boolean);
+  if (tokens.length === 0 || tokens.some((t) => !/^[0-6]$/.test(t))) {
+    return 'Days must be a comma-separated list of 0-6 (e.g. 1,3,5)';
+  }
+  return null;
 }
 
 export function HabitsPage() {
@@ -151,6 +162,7 @@ export function HabitsPage() {
         open={showAdd}
         initialValues={{ frequency: 'daily' }}
         fields={habitFields}
+        validate={validateHabit}
         onSubmit={(vals) => {
           submitHabit(vals);
           setShowAdd(false);
@@ -168,6 +180,7 @@ export function HabitsPage() {
             days: daysToInput(editHabit?.days),
           }}
           fields={habitFields}
+          validate={validateHabit}
           onSubmit={(vals) => {
             submitHabit(vals, editId);
             setEditId(null);

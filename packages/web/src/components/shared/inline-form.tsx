@@ -19,6 +19,8 @@ interface InlineFormProps {
   open: boolean;
   initialValues?: Record<string, string>;
   fields: Field[];
+  /** Cross-field check run on submit; return an error message to block it. */
+  validate?: (values: Record<string, string>) => string | null;
   onSubmit: (values: Record<string, string>) => void;
   onCancel: () => void;
   submitLabel?: string;
@@ -26,14 +28,16 @@ interface InlineFormProps {
 
 type FirstFieldEl = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 
-export function InlineForm({ open, initialValues = {}, fields, onSubmit, onCancel, submitLabel = 'Save' }: InlineFormProps) {
+export function InlineForm({ open, initialValues = {}, fields, validate, onSubmit, onCancel, submitLabel = 'Save' }: InlineFormProps) {
   const [values, setValues] = useState<Record<string, string>>(initialValues);
+  const [error, setError] = useState<string | null>(null);
   const firstFieldRef = useRef<FirstFieldEl>(null);
   const setInputFocused = useKeyboardStore((s) => s.setInputFocused);
 
   useEffect(() => {
     if (open) {
       setValues(initialValues);
+      setError(null);
       setTimeout(() => firstFieldRef.current?.focus(), 50);
     }
     return () => setInputFocused(false);
@@ -49,7 +53,9 @@ export function InlineForm({ open, initialValues = {}, fields, onSubmit, onCance
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          onSubmit(values);
+          const err = validate?.(values) ?? null;
+          setError(err);
+          if (!err) onSubmit(values);
         }}
         onKeyDown={(e) => {
           if (e.key === 'Escape') onCancel();
@@ -106,6 +112,9 @@ export function InlineForm({ open, initialValues = {}, fields, onSubmit, onCance
             </div>
           );
         })}
+        {error && (
+          <p role="alert" className="text-xs text-[var(--color-error)]">{error}</p>
+        )}
         <div className="flex justify-end gap-2 pt-2">
           <button
             type="button"

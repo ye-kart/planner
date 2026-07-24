@@ -151,7 +151,21 @@ export function AreasPage() {
         {areas?.map((area, i) => (
           <div
             key={area.id}
+            role="button"
+            tabIndex={0}
             onClick={() => setDetailId(area.id)}
+            onKeyDown={(e) => {
+              // Only when the row itself is focused — Enter on an inner Edit/
+              // Delete button must not also open the detail view. Stop
+              // propagation so the page-level Enter handler (which acts on the
+              // j/k selection, possibly a different row) doesn't double-fire.
+              if (e.target !== e.currentTarget) return;
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                setDetailId(area.id);
+              }
+            }}
             data-selected={i === selectedIdx ? '' : undefined}
             className={`w-full text-left px-4 py-3 rounded-lg flex flex-col md:flex-row md:items-center justify-between gap-1.5 transition-colors cursor-pointer ${
               i === selectedIdx

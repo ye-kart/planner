@@ -105,4 +105,22 @@ describe('TaskService', () => {
     expect(overdue[0].title).toBe('Old task');
     expect(overdue[0].daysOverdue).toBeGreaterThan(0);
   });
+
+  it('keeps in_progress tasks in due today / overdue / upcoming', () => {
+    const dueNow = taskService.start(taskService.add('Started today', { dueDate: today() }).id);
+    const overdue = taskService.start(taskService.add('Started old', { dueDate: '2020-01-01' }).id);
+
+    expect(taskService.dueToday().map((t) => t.id)).toContain(dueNow.id);
+    expect(taskService.overdue().map((t) => t.id)).toContain(overdue.id);
+    expect(taskService.upcoming().map((t) => t.id)).toContain(dueNow.id);
+  });
+
+  it('excludes done tasks from due today / overdue / upcoming', () => {
+    const dueNow = taskService.markDone(taskService.add('Done today', { dueDate: today() }).id);
+    const old = taskService.markDone(taskService.add('Done old', { dueDate: '2020-01-01' }).id);
+
+    expect(taskService.dueToday().map((t) => t.id)).not.toContain(dueNow.id);
+    expect(taskService.overdue().map((t) => t.id)).not.toContain(old.id);
+    expect(taskService.upcoming().map((t) => t.id)).not.toContain(dueNow.id);
+  });
 });

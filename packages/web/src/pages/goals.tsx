@@ -58,7 +58,12 @@ export function GoalsPage() {
             setDetailId(null);
             break;
           case 'd':
-            goalsApi.markDone(spaceId, detailId).then(refreshGoals);
+            if (detail && detail.status !== 'done') {
+              goalsApi.markDone(spaceId, detailId).then(refreshGoals);
+            }
+            break;
+          case 'e':
+            setEditId(detailId);
             break;
           case 'x':
             setDeleteId(detailId);
@@ -107,7 +112,7 @@ export function GoalsPage() {
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputFocused, overlayOpen, goals, selectedIdx, filter, qc, spaceId, detailId]);
+  }, [inputFocused, overlayOpen, goals, selectedIdx, filter, qc, spaceId, detailId, detail]);
 
   if (isLoading) return <div className="text-[var(--color-text-secondary)]">Loading...</div>;
 
@@ -268,7 +273,21 @@ export function GoalsPage() {
         {goals?.map((goal, i) => (
           <div
             key={goal.id}
+            role="button"
+            tabIndex={0}
             onClick={() => setDetailId(goal.id)}
+            onKeyDown={(e) => {
+              // Only when the row itself is focused — Enter on an inner Edit/
+              // Delete button must not also open the detail view. Stop
+              // propagation so the page-level Enter handler (which acts on the
+              // j/k selection, possibly a different row) doesn't double-fire.
+              if (e.target !== e.currentTarget) return;
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                setDetailId(goal.id);
+              }
+            }}
             data-selected={i === selectedIdx ? '' : undefined}
             className={`w-full text-left px-4 py-3 rounded-lg transition-colors cursor-pointer ${
               i === selectedIdx ? 'bg-[var(--color-bg-highlight)] border border-[var(--color-border-active)]' : 'hover:bg-[var(--color-bg-highlight)] border border-transparent'
