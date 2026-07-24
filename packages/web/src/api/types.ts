@@ -114,7 +114,7 @@ export interface Message {
   position: number;
 }
 
-export type TrialStatusState = 'trial' | 'trial_expired' | 'active' | 'admin';
+export type TrialStatusState = 'trial' | 'trial_expired' | 'active' | 'admin' | 'none';
 
 export interface TrialStatus {
   state: TrialStatusState;

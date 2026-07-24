@@ -149,11 +149,25 @@ export function AreasPage() {
 
       <div className="space-y-2">
         {areas?.map((area, i) => (
-          <button
+          <div
             key={area.id}
+            role="button"
+            tabIndex={0}
             onClick={() => setDetailId(area.id)}
+            onKeyDown={(e) => {
+              // Only when the row itself is focused — Enter on an inner Edit/
+              // Delete button must not also open the detail view. Stop
+              // propagation so the page-level Enter handler (which acts on the
+              // j/k selection, possibly a different row) doesn't double-fire.
+              if (e.target !== e.currentTarget) return;
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                setDetailId(area.id);
+              }
+            }}
             data-selected={i === selectedIdx ? '' : undefined}
-            className={`w-full text-left px-4 py-3 rounded-lg flex flex-col md:flex-row md:items-center justify-between gap-1.5 transition-colors ${
+            className={`w-full text-left px-4 py-3 rounded-lg flex flex-col md:flex-row md:items-center justify-between gap-1.5 transition-colors cursor-pointer ${
               i === selectedIdx
                 ? 'bg-[var(--color-bg-highlight)] border border-[var(--color-border-active)]'
                 : 'hover:bg-[var(--color-bg-highlight)] border border-transparent'
@@ -165,12 +179,28 @@ export function AreasPage() {
                 <p className="text-xs text-[var(--color-text-secondary)] mt-0.5 truncate">{area.description}</p>
               )}
             </div>
-            <div className="flex gap-3 md:gap-4 text-xs text-[var(--color-text-secondary)] shrink-0">
-              <span>{area.goalCount} goals</span>
-              <span>{area.taskCount} tasks</span>
-              <span>{area.habitCount} habits</span>
+            <div className="flex items-center gap-3 md:gap-4 shrink-0">
+              <div className="flex gap-3 md:gap-4 text-xs text-[var(--color-text-secondary)]">
+                <span>{area.goalCount} goal{area.goalCount === 1 ? '' : 's'}</span>
+                <span>{area.taskCount} task{area.taskCount === 1 ? '' : 's'}</span>
+                <span>{area.habitCount} habit{area.habitCount === 1 ? '' : 's'}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setEditId(area.id); }}
+                  className="px-2.5 py-1.5 text-xs rounded border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-accent)] hover:border-[var(--color-border-active)] transition-colors"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setDeleteId(area.id); }}
+                  className="px-2.5 py-1.5 text-xs rounded border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-error)] hover:border-[var(--color-error)] transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
-          </button>
+          </div>
         ))}
         {areas?.length === 0 && (
           <div className="text-center py-12">

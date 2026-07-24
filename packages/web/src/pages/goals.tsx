@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useGoals, useGoal, useCreateGoal, useUpdateGoal, useDeleteGoal } from '../hooks/use-api';
 import { goalsApi } from '../api/goals.api';
 import { useQueryClient } from '@tanstack/react-query';
+import { useCurrentSpace } from '../contexts/space-context';
 import { useKeyboardStore } from '../stores/keyboard.store';
 import { Panel } from '../components/shared/panel';
 import { PriorityBadge } from '../components/shared/priority-badge';
@@ -12,7 +13,15 @@ import { ConfirmDialog } from '../components/shared/confirm-dialog';
 
 const FILTERS = ['active', 'done', 'archived', 'all'] as const;
 
+const PRIORITY_OPTIONS = [
+  { value: 'low', label: 'Low' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'high', label: 'High' },
+  { value: 'urgent', label: 'Urgent' },
+];
+
 export function GoalsPage() {
+  const { spaceId } = useCurrentSpace();
   const [filter, setFilter] = useState<string>('active');
   const filterParam = filter === 'all' ? undefined : filter;
   const { data: goals, isLoading } = useGoals({ status: filterParam });
@@ -30,6 +39,8 @@ export function GoalsPage() {
   const { data: detail } = useGoal(detailId ?? '');
   const { inputFocused, overlayOpen } = useKeyboardStore();
 
+  const refreshGoals = () => qc.invalidateQueries({ queryKey: ['spaces', spaceId, 'goals'] });
+
   useEffect(() => {
     document.querySelector('[data-selected]')?.scrollIntoView({ block: 'nearest' });
   }, [selectedIdx]);
@@ -38,6 +49,28 @@ export function GoalsPage() {
     function handleKey(e: KeyboardEvent) {
       if (inputFocused || overlayOpen) return;
       if (!goals) return;
+
+      // In the detail view, route mutating shortcuts at the open goal, not the
+      // (possibly different) list selection.
+      if (detailId) {
+        switch (e.key) {
+          case 'Backspace':
+            setDetailId(null);
+            break;
+          case 'd':
+            if (detail && detail.status !== 'done') {
+              goalsApi.markDone(spaceId, detailId).then(refreshGoals);
+            }
+            break;
+          case 'e':
+            setEditId(detailId);
+            break;
+          case 'x':
+            setDeleteId(detailId);
+            break;
+        }
+        return;
+      }
 
       switch (e.key) {
         case 'j': case 'ArrowDown':
@@ -55,9 +88,6 @@ export function GoalsPage() {
         case 'Enter':
           if (goals[selectedIdx]) setDetailId(goals[selectedIdx].id);
           break;
-        case 'Backspace':
-          setDetailId(null);
-          break;
         case 'n':
           setShowAdd(true);
           break;
@@ -69,7 +99,7 @@ export function GoalsPage() {
           break;
         case 'd':
           if (goals[selectedIdx]) {
-            goalsApi.markDone(goals[selectedIdx].id).then(() => qc.invalidateQueries({ queryKey: ['goals'] }));
+            goalsApi.markDone(spaceId, goals[selectedIdx].id).then(refreshGoals);
           }
           break;
         case 'f': case 'F': {
@@ -81,7 +111,8 @@ export function GoalsPage() {
     }
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
-  }, [inputFocused, overlayOpen, goals, selectedIdx, filter, qc]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inputFocused, overlayOpen, goals, selectedIdx, filter, qc, spaceId, detailId, detail]);
 
   if (isLoading) return <div className="text-[var(--color-text-secondary)]">Loading...</div>;
 
@@ -95,6 +126,28 @@ export function GoalsPage() {
           <h1 className="text-xl md:text-2xl font-bold text-[var(--color-text-accent)]">{detail.title}</h1>
           <StatusBadge status={detail.status} />
           <PriorityBadge priority={detail.priority} />
+          <div className="flex items-center gap-1 ml-auto">
+            {detail.status !== 'done' && (
+              <button
+                onClick={() => goalsApi.markDone(spaceId, detail.id).then(refreshGoals)}
+                className="px-2.5 py-1.5 text-xs rounded border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-success)] hover:border-[var(--color-success)] transition-colors"
+              >
+                Mark done
+              </button>
+            )}
+            <button
+              onClick={() => setEditId(detail.id)}
+              className="px-2.5 py-1.5 text-xs rounded border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-accent)] hover:border-[var(--color-border-active)] transition-colors"
+            >
+              Edit
+            </button>
+            <button
+              onClick={() => setDeleteId(detail.id)}
+              className="px-2.5 py-1.5 text-xs rounded border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-error)] hover:border-[var(--color-error)] transition-colors"
+            >
+              Delete
+            </button>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
@@ -106,12 +159,12 @@ export function GoalsPage() {
           {detail.milestones.map((ms) => (
             <div key={ms.id} className="flex items-center gap-2 py-1">
               <button
-                onClick={() => goalsApi.toggleMilestone(ms.id).then(() => qc.invalidateQueries({ queryKey: ['goals'] }))}
+                onClick={() => goalsApi.toggleMilestone(spaceId, ms.id).then(refreshGoals)}
                 className={`w-4 h-4 rounded border text-xs flex items-center justify-center ${
                   ms.done ? 'bg-[var(--color-success)] border-[var(--color-success)] text-[var(--color-bg)]' : 'border-[var(--color-border)]'
                 }`}
               >
-                {ms.done ? '\u2713' : null}
+                {ms.done ? '✓' : null}
               </button>
               <span className={`text-sm ${ms.done ? 'line-through text-[var(--color-text-secondary)]' : 'text-[var(--color-text-primary)]'}`}>
                 {ms.title}
@@ -120,6 +173,37 @@ export function GoalsPage() {
           ))}
           {detail.milestones.length === 0 && <p className="text-xs text-[var(--color-text-secondary)]">No milestones</p>}
         </Panel>
+
+        {editId && (
+          <InlineForm
+            open
+            initialValues={{
+              title: detail.title,
+              description: detail.description ?? '',
+              priority: detail.priority,
+              targetDate: detail.targetDate ?? '',
+            }}
+            fields={[
+              { name: 'title', label: 'Title', required: true },
+              { name: 'description', label: 'Description', type: 'textarea' },
+              { name: 'priority', label: 'Priority', type: 'select', options: PRIORITY_OPTIONS },
+              { name: 'targetDate', label: 'Target Date', type: 'date' },
+            ]}
+            onSubmit={(vals) => {
+              updateGoal.mutate({ id: detail.id, title: vals.title, description: vals.description || undefined, priority: vals.priority || undefined, targetDate: vals.targetDate || undefined });
+              setEditId(null);
+            }}
+            onCancel={() => setEditId(null)}
+          />
+        )}
+
+        <ConfirmDialog
+          open={!!deleteId}
+          title="Delete Goal"
+          message="Milestones will be deleted. Tasks and habits will be unlinked."
+          onConfirm={() => { if (deleteId) { deleteGoal.mutate(deleteId); setDetailId(null); } setDeleteId(null); }}
+          onCancel={() => setDeleteId(null)}
+        />
       </div>
     );
   }
@@ -147,13 +231,15 @@ export function GoalsPage() {
 
       <InlineForm
         open={showAdd}
+        initialValues={{ priority: 'medium' }}
         fields={[
           { name: 'title', label: 'Title', required: true },
-          { name: 'description', label: 'Description' },
+          { name: 'description', label: 'Description', type: 'textarea' },
+          { name: 'priority', label: 'Priority', type: 'select', options: PRIORITY_OPTIONS },
           { name: 'targetDate', label: 'Target Date', type: 'date' },
         ]}
         onSubmit={(vals) => {
-          createGoal.mutate({ title: vals.title, description: vals.description || undefined, targetDate: vals.targetDate || undefined });
+          createGoal.mutate({ title: vals.title, description: vals.description || undefined, priority: vals.priority || undefined, targetDate: vals.targetDate || undefined });
           setShowAdd(false);
         }}
         onCancel={() => setShowAdd(false)}
@@ -166,15 +252,17 @@ export function GoalsPage() {
           initialValues={{
             title: goals?.find((g) => g.id === editId)?.title ?? '',
             description: goals?.find((g) => g.id === editId)?.description ?? '',
+            priority: goals?.find((g) => g.id === editId)?.priority ?? 'medium',
             targetDate: goals?.find((g) => g.id === editId)?.targetDate ?? '',
           }}
           fields={[
             { name: 'title', label: 'Title', required: true },
-            { name: 'description', label: 'Description' },
+            { name: 'description', label: 'Description', type: 'textarea' },
+            { name: 'priority', label: 'Priority', type: 'select', options: PRIORITY_OPTIONS },
             { name: 'targetDate', label: 'Target Date', type: 'date' },
           ]}
           onSubmit={(vals) => {
-            updateGoal.mutate({ id: editId, title: vals.title, description: vals.description || undefined, targetDate: vals.targetDate || undefined });
+            updateGoal.mutate({ id: editId, title: vals.title, description: vals.description || undefined, priority: vals.priority || undefined, targetDate: vals.targetDate || undefined });
             setEditId(null);
           }}
           onCancel={() => setEditId(null)}
@@ -183,21 +271,59 @@ export function GoalsPage() {
 
       <div className="space-y-2">
         {goals?.map((goal, i) => (
-          <button
+          <div
             key={goal.id}
+            role="button"
+            tabIndex={0}
             onClick={() => setDetailId(goal.id)}
+            onKeyDown={(e) => {
+              // Only when the row itself is focused — Enter on an inner Edit/
+              // Delete button must not also open the detail view. Stop
+              // propagation so the page-level Enter handler (which acts on the
+              // j/k selection, possibly a different row) doesn't double-fire.
+              if (e.target !== e.currentTarget) return;
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                setDetailId(goal.id);
+              }
+            }}
             data-selected={i === selectedIdx ? '' : undefined}
-            className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
+            className={`w-full text-left px-4 py-3 rounded-lg transition-colors cursor-pointer ${
               i === selectedIdx ? 'bg-[var(--color-bg-highlight)] border border-[var(--color-border-active)]' : 'hover:bg-[var(--color-bg-highlight)] border border-transparent'
             }`}
           >
-            <span className="text-sm font-medium text-[var(--color-text-primary)]">{goal.title}</span>
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-sm font-medium text-[var(--color-text-primary)]">{goal.title}</span>
+              <div className="flex items-center gap-1 shrink-0">
+                {goal.status !== 'done' && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); goalsApi.markDone(spaceId, goal.id).then(refreshGoals); }}
+                    className="px-2.5 py-1.5 text-xs rounded border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-success)] hover:border-[var(--color-success)] transition-colors"
+                  >
+                    Done
+                  </button>
+                )}
+                <button
+                  onClick={(e) => { e.stopPropagation(); setEditId(goal.id); }}
+                  className="px-2.5 py-1.5 text-xs rounded border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-accent)] hover:border-[var(--color-border-active)] transition-colors"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setDeleteId(goal.id); }}
+                  className="px-2.5 py-1.5 text-xs rounded border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-error)] hover:border-[var(--color-error)] transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
             <div className="flex items-center gap-2 mt-1.5">
               <StatusBadge status={goal.status} />
               <PriorityBadge priority={goal.priority} />
             </div>
             <ProgressBar value={goal.progress} className="w-full mt-2" />
-          </button>
+          </div>
         ))}
         {goals?.length === 0 && (
           <div className="text-center py-12">

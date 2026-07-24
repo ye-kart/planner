@@ -4,6 +4,41 @@ import { useKeyboardStore } from '../stores/keyboard.store';
 import { StreakDisplay } from '../components/shared/streak-display';
 import { InlineForm } from '../components/shared/inline-form';
 import { ConfirmDialog } from '../components/shared/confirm-dialog';
+import type { Habit } from '../api/types';
+
+const FREQUENCY_OPTIONS = [
+  { value: 'daily', label: 'Daily' },
+  { value: 'weekly', label: 'Weekly' },
+  { value: 'specific_days', label: 'Specific days' },
+];
+
+/** Stored as a JSON array string e.g. "[1,3,5]" → "1,3,5" for the form. */
+function daysToInput(days: string | null | undefined): string {
+  if (!days) return '';
+  try {
+    return (JSON.parse(days) as number[]).join(',');
+  } catch {
+    return '';
+  }
+}
+
+function inputToDays(s: string): number[] {
+  const days = s
+    .split(',')
+    .map((x) => parseInt(x.trim(), 10))
+    .filter((n) => !isNaN(n) && n >= 0 && n <= 6);
+  return [...new Set(days)];
+}
+
+/** A specific_days habit with no (or garbage) days would never be due. */
+function validateHabit(vals: Record<string, string>): string | null {
+  if ((vals.frequency || 'daily') !== 'specific_days') return null;
+  const tokens = (vals.days ?? '').split(',').map((t) => t.trim()).filter(Boolean);
+  if (tokens.length === 0 || tokens.some((t) => !/^[0-6]$/.test(t))) {
+    return 'Days must be a comma-separated list of 0-6 (e.g. 1,3,5)';
+  }
+  return null;
+}
 
 export function HabitsPage() {
   const [viewMode, setViewMode] = useState<'today' | 'all'>('today');
@@ -23,6 +58,18 @@ export function HabitsPage() {
 
   const displayItems = viewMode === 'today' ? todayHabits : allHabits;
   const isToday = viewMode === 'today';
+
+  const editHabit: Habit | undefined = (allHabits ?? todayHabits)?.find((h) => h.id === editId);
+
+  function submitHabit(vals: Record<string, string>, id?: string) {
+    const frequency = vals.frequency || 'daily';
+    const days = frequency === 'specific_days' ? inputToDays(vals.days || '') : undefined;
+    if (id) {
+      updateHabit.mutate({ id, title: vals.title, frequency, days });
+    } else {
+      createHabit.mutate({ title: vals.title, frequency, days });
+    }
+  }
 
   useEffect(() => {
     document.querySelector('[data-selected]')?.scrollIntoView({ block: 'nearest' });
@@ -78,12 +125,18 @@ export function HabitsPage() {
 
   const allDone = isToday && todayHabits && todayHabits.length > 0 && todayHabits.every((h) => h.done);
 
+  const habitFields = [
+    { name: 'title', label: 'Title', required: true },
+    { name: 'frequency', label: 'Frequency', type: 'select' as const, options: FREQUENCY_OPTIONS },
+    { name: 'days', label: 'Days (specific days only — e.g. 1,3,5; 0=Sun)', placeholder: '1,3,5' },
+  ];
+
   return (
     <div className="space-y-4 max-w-2xl">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-[var(--color-text-accent)]">
           Habits
-          {allDone && <span className="ml-2 text-[var(--color-success)]">{'\u2728'} All done!</span>}
+          {allDone && <span className="ml-2 text-[var(--color-success)]">{'✨'} All done!</span>}
         </h1>
         <button onClick={() => setShowAdd(true)} className="px-4 py-2 text-sm rounded-lg bg-[var(--color-accent-1)] text-[var(--color-bg)] font-medium hover:opacity-90 active:opacity-80 transition-opacity">
           + New Habit
@@ -107,11 +160,11 @@ export function HabitsPage() {
 
       <InlineForm
         open={showAdd}
-        fields={[
-          { name: 'title', label: 'Title', required: true },
-        ]}
+        initialValues={{ frequency: 'daily' }}
+        fields={habitFields}
+        validate={validateHabit}
         onSubmit={(vals) => {
-          createHabit.mutate({ title: vals.title });
+          submitHabit(vals);
           setShowAdd(false);
         }}
         onCancel={() => setShowAdd(false)}
@@ -122,13 +175,14 @@ export function HabitsPage() {
         <InlineForm
           open
           initialValues={{
-            title: displayItems?.find((h) => h.id === editId)?.title ?? '',
+            title: editHabit?.title ?? '',
+            frequency: editHabit?.frequency ?? 'daily',
+            days: daysToInput(editHabit?.days),
           }}
-          fields={[
-            { name: 'title', label: 'Title', required: true },
-          ]}
+          fields={habitFields}
+          validate={validateHabit}
           onSubmit={(vals) => {
-            updateHabit.mutate({ id: editId, title: vals.title });
+            submitHabit(vals, editId);
             setEditId(null);
           }}
           onCancel={() => setEditId(null)}
@@ -163,7 +217,7 @@ export function HabitsPage() {
                       ? 'bg-[var(--color-success)] border-[var(--color-success)] text-[var(--color-bg)]'
                       : 'border-[var(--color-border)]'
                   }`}>
-                    {isDone ? '\u2713' : null}
+                    {isDone ? '✓' : null}
                   </div>
                 )}
                 <span className={`text-sm truncate ${isDone ? 'line-through text-[var(--color-text-secondary)]' : 'text-[var(--color-text-primary)]'}`}>
@@ -171,7 +225,21 @@ export function HabitsPage() {
                 </span>
                 <span className="text-xs text-[var(--color-text-secondary)] font-mono shrink-0">{habit.frequency}</span>
               </div>
-              <StreakDisplay current={habit.currentStreak} best={habit.bestStreak} />
+              <div className="flex items-center gap-2 shrink-0">
+                <StreakDisplay current={habit.currentStreak} best={habit.bestStreak} />
+                <button
+                  onClick={(e) => { e.stopPropagation(); setEditId(habit.id); }}
+                  className="px-2.5 py-1.5 text-xs rounded border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-accent)] hover:border-[var(--color-border-active)] transition-colors"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setDeleteId(habit.id); }}
+                  className="px-2.5 py-1.5 text-xs rounded border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-error)] hover:border-[var(--color-error)] transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           );
         })}

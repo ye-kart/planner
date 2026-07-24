@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createTestDb, createTestSpace } from './helpers/db.js';
-import { AreaRepository, GoalRepository, MilestoneRepository, TaskRepository, HabitRepository, AreaService, GoalService, type DB } from '@planner/core';
+import { AreaRepository, GoalRepository, MilestoneRepository, TaskRepository, HabitRepository, SpaceRepository, AreaService, GoalService, generateId, type DB } from '@planner/core';
 
 let db: DB;
 let spaceId: string;
@@ -129,6 +129,30 @@ describe('GoalService', () => {
       // 1/1 done = 100%
       const updated = goalService.show(goal.id);
       expect(updated.progress).toBe(100);
+    });
+
+    it('rejects milestone mutations from another space', () => {
+      const goal = goalService.add('Goal');
+      const ms = goalService.addMilestone(goal.id, 'Step 1');
+
+      // A GoalService scoped to a different space must not see the milestone,
+      // even though MilestoneRepository itself is not space-scoped.
+      const otherSpaceId = new SpaceRepository(db)
+        .create({ id: generateId(), name: 'Other Space', icon: '🚫', position: 1, createdAt: '2025-01-01' })
+        .id;
+      const otherGoalService = new GoalService(
+        new GoalRepository(db, otherSpaceId),
+        new MilestoneRepository(db),
+        new AreaRepository(db, otherSpaceId),
+        new TaskRepository(db, otherSpaceId),
+        new HabitRepository(db, otherSpaceId),
+      );
+
+      expect(() => otherGoalService.toggleMilestone(ms.id)).toThrow('not found');
+      expect(() => otherGoalService.removeMilestone(ms.id)).toThrow('not found');
+
+      // Untouched and still mutable from its own space.
+      expect(goalService.toggleMilestone(ms.id).done).toBe(true);
     });
   });
 });

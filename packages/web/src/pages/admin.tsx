@@ -1,12 +1,29 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchAllowedUsers, addAllowedUser, removeAllowedUser, type AllowedUser } from '../api/admin.api';
+import { useAuthMe } from '../hooks/use-api';
+import { ApiError } from '../api/client';
 
 export function AdminPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { data: users, isLoading } = useQuery({ queryKey: ['admin', 'allowed-users'], queryFn: fetchAllowedUsers });
+
+  // Gate the route: redirect anyone who isn't a confirmed admin (the sidebar
+  // only hides the link; the route itself was previously reachable directly).
+  const { data: authMe, isLoading: authLoading } = useAuthMe();
+  useEffect(() => {
+    if (!authLoading && authMe && !authMe.isAdmin) {
+      navigate('/', { replace: true });
+    }
+  }, [authLoading, authMe, navigate]);
+
+  const { data: users, isLoading, isError: usersError, error: usersErrorObj } = useQuery({
+    queryKey: ['admin', 'allowed-users'],
+    queryFn: fetchAllowedUsers,
+    enabled: authMe?.isAdmin === true,
+    retry: false,
+  });
 
   const addMutation = useMutation({
     mutationFn: (data: { provider: string; username: string }) => addAllowedUser(data.provider, data.username),
@@ -87,7 +104,13 @@ export function AdminPage() {
           )}
 
           {/* User list */}
-          {isLoading ? (
+          {usersError ? (
+            <p className="text-sm text-red-400">
+              {usersErrorObj instanceof ApiError && usersErrorObj.status === 403
+                ? 'You do not have admin access.'
+                : 'Failed to load allowed users.'}
+            </p>
+          ) : isLoading ? (
             <p className="text-sm text-[var(--color-text-secondary)]">Loading...</p>
           ) : (
             <div className="space-y-1">

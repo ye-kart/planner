@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useNavigate, useLocation, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useKeyboardStore } from '../stores/keyboard.store';
 import { useThemeStore } from '../stores/theme.store';
 
@@ -7,7 +7,6 @@ const SCREEN_SUFFIXES = ['', '/areas', '/goals', '/tasks', '/habits'];
 
 export function useKeyboard() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { spaceId } = useParams<{ spaceId: string }>();
   const { inputFocused, overlayOpen } = useKeyboardStore();
   const cycleTheme = useThemeStore((s) => s.cycleTheme);
@@ -40,16 +39,9 @@ export function useKeyboard() {
         return;
       }
 
-      // Tab / Shift+Tab for prev/next screen
-      if (e.key === 'Tab') {
-        e.preventDefault();
-        const currentIdx = screenRoutes.indexOf(location.pathname);
-        if (currentIdx === -1) return;
-        const delta = e.shiftKey ? -1 : 1;
-        const nextIdx = (currentIdx + delta + screenRoutes.length) % screenRoutes.length;
-        navigate(screenRoutes[nextIdx]);
-        return;
-      }
+      // Note: bare Tab is intentionally NOT captured for screen switching —
+      // doing so would suppress native focus traversal (WCAG 2.1.1). Use the
+      // 1-5 shortcuts (or the sidebar) to switch screens.
 
       // Theme toggle
       if (e.key === 't' && !e.metaKey && !e.ctrlKey) {
@@ -66,5 +58,5 @@ export function useKeyboard() {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [inputFocused, overlayOpen, navigate, location.pathname, cycleTheme, spaceId]);
+  }, [inputFocused, overlayOpen, navigate, cycleTheme, spaceId]);
 }

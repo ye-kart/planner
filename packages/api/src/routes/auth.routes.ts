@@ -175,11 +175,22 @@ export function createAuthRoutes(container: ApiContainer): Hono {
   });
 
   app.get('/trial', (c) => {
+    // Degrade gracefully like /me: with no/expired session (e.g. OAuth not
+    // configured) return a 200 sentinel instead of 401. A 401 here would trip
+    // the web client's global "401 -> /login" redirect and brick the SPA, even
+    // though all data routes are open when auth is disabled.
     const sessionId = getCookie(c, 'session');
-    if (!sessionId) return c.json({ error: 'Unauthorized' }, 401);
-    const session = sessionRepo.findById(sessionId);
+    const session = sessionId ? sessionRepo.findById(sessionId) : undefined;
     if (!session || new Date(session.expiresAt) < new Date()) {
-      return c.json({ error: 'Unauthorized' }, 401);
+      return c.json({
+        state: 'none',
+        trialStartedAt: null,
+        trialExpiresAt: null,
+        subscriptionExpiresAt: null,
+        plan: null,
+        daysRemaining: 0,
+        hasAiAccess: false,
+      });
     }
     trialService.ensureTrial(session.userId);
     return c.json(trialService.getStatus(session.userId));

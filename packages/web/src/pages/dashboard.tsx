@@ -95,9 +95,14 @@ export function DashboardPage() {
           <p className="text-2xl font-bold text-[var(--color-success)]">{summary.habitsDone}/{summary.habitsDue}</p>
         </Panel>
         <Panel>
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-xs text-[var(--color-text-secondary)]">{summary.bestActiveStreak ? summary.bestActiveStreak.habit : 'Streaks'}</p>
-            <span className="text-base opacity-60">~</span>
+          <div className="flex items-center justify-between gap-1 mb-1">
+            <p
+              className="text-xs text-[var(--color-text-secondary)] truncate min-w-0"
+              title={summary.bestActiveStreak ? summary.bestActiveStreak.habit : undefined}
+            >
+              {summary.bestActiveStreak ? summary.bestActiveStreak.habit : 'Streaks'}
+            </p>
+            <span className="text-base opacity-60 shrink-0">~</span>
           </div>
           {summary.bestActiveStreak ? (
             <p className="text-2xl font-bold text-[var(--color-streak-fire)]">{summary.bestActiveStreak.streak}</p>
