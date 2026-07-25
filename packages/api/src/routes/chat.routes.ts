@@ -76,23 +76,24 @@ export function createChatRoutes(getContainer: ContainerGetter): Hono {
       const conversationId = c.req.param('id');
       const currentScreen = body.currentScreen ?? 'dashboard';
 
+      // StreamCallbacks are sync, so writeSSE can't be awaited inline. Chain the
+      // writes and await the tail: Hono closes the stream once this handler
+      // returns, dropping any still-pending write — which silently ate every
+      // terminal 'complete'/'error' event.
+      let tail = Promise.resolve();
+      const send = (event: string, data: string) => {
+        tail = tail.then(() => stream.writeSSE({ event, data }));
+      };
+
       await chatService.sendMessage(conversationId, body.message, currentScreen, {
-        onToken: (token) => {
-          stream.writeSSE({ event: 'token', data: token });
-        },
-        onToolCall: (name, args) => {
-          stream.writeSSE({ event: 'tool_call', data: JSON.stringify({ name, args }) });
-        },
-        onToolResult: (name, result) => {
-          stream.writeSSE({ event: 'tool_result', data: JSON.stringify({ name, result }) });
-        },
-        onComplete: (fullText) => {
-          stream.writeSSE({ event: 'complete', data: fullText });
-        },
-        onError: (error) => {
-          stream.writeSSE({ event: 'error', data: error.message });
-        },
+        onToken: (token) => send('token', token),
+        onToolCall: (name, args) => send('tool_call', JSON.stringify({ name, args })),
+        onToolResult: (name, result) => send('tool_result', JSON.stringify({ name, result })),
+        onComplete: (fullText) => send('complete', fullText),
+        onError: (error) => send('error', error.message),
       });
+
+      await tail;
     });
   });
 
