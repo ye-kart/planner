@@ -44,5 +44,9 @@ When the user asks you to analyze a document, import a file, or mentions a file 
 ${todaySummary}
 
 ## All Planning Data
+Snapshot taken before any tool calls in this turn. It does not include items you
+create, edit, or delete while answering — trust your tool results for those, and
+never describe something you just created as having already existed.
+
 ${allData}`;
 }

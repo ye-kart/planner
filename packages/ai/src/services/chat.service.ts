@@ -134,7 +134,7 @@ export class ChatService {
     });
 
     try {
-      await this.streamWithToolLoop(client, config.model, apiMessages, conversationId, currentScreen, callbacks);
+      await this.streamWithToolLoop(client, config.model, apiMessages, conversationId, callbacks);
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       callbacks.onError(new ChatError(`API error: ${err.message}`));
@@ -146,7 +146,6 @@ export class ChatService {
     model: string,
     apiMessages: ChatCompletionMessageParam[],
     conversationId: string,
-    currentScreen: string,
     callbacks: StreamCallbacks,
   ): Promise<void> {
     const tools = getToolDefinitions();
@@ -263,12 +262,12 @@ export class ChatService {
         });
       }
 
-      // Rebuild system prompt with fresh data after tool mutations
-      apiMessages[0] = {
-        role: 'system',
-        content: buildSystemPrompt(currentScreen, this.contextService),
-      };
-
+      // The system prompt is deliberately NOT rebuilt here. Overwriting it with
+      // post-mutation data made the model see its own writes as pre-existing
+      // records — it would create a task, then read the refreshed dump and
+      // report the task had "already been there". Leaving the snapshot pinned to
+      // the start of the turn keeps cause and effect legible: the data predates
+      // the tool calls, and the tool results carry every change made since.
       // Loop continues — model will process tool results and potentially call more tools
     }
 
