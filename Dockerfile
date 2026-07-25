@@ -1,6 +1,11 @@
 # Stage 1: Dependencies
 FROM node:22-slim AS deps
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Pinned deliberately. pnpm@latest silently rolled to 11.x, which stopped
+# reading the "pnpm" field in package.json — so onlyBuiltDependencies was
+# ignored, better-sqlite3's native build never ran, and every deploy since
+# 2026-06-05 died on ERR_PNPM_IGNORED_BUILDS. Keep this in step with the
+# pnpm used locally; moving to 11.x needs the settings migrated first.
+RUN corepack enable && corepack prepare pnpm@10.5.0 --activate
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
