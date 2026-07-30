@@ -43,7 +43,7 @@ export function createApp(options?: CreateAppOptions) {
   app.route('/api/auth', createAuthRoutes(authContainer));
 
   // Auth middleware for all other API routes
-  if (process.env.PLANNER_GITHUB_CLIENT_ID || process.env.PLANNER_GOOGLE_CLIENT_ID) {
+  if (process.env.PLANNER_GITHUB_CLIENT_ID || process.env.PLANNER_GOOGLE_CLIENT_ID || (process.env.PLANNER_RESEND_API_KEY && process.env.PLANNER_EMAIL_FROM)) {
     const authMiddleware = createAuthMiddleware(authContainer);
     app.use('/api/*', async (c, next) => {
       if (c.req.path.startsWith('/api/auth')) return next();

@@ -17,6 +17,8 @@ export type {
   Message, NewMessage,
   Session, NewSession,
   AllowedUser, NewAllowedUser,
+  PasswordCredential, NewPasswordCredential,
+  EmailToken, NewEmailToken,
   UserTrial, NewUserTrial,
 } from './db/schema.js';
 
@@ -32,6 +34,8 @@ export { ConversationRepository } from './repositories/conversation.repository.j
 export { MessageRepository } from './repositories/message.repository.js';
 export { SessionRepository } from './repositories/session.repository.js';
 export { AllowedUserRepository } from './repositories/allowed-user.repository.js';
+export { PasswordCredentialRepository } from './repositories/password-credential.repository.js';
+export { EmailTokenRepository } from './repositories/email-token.repository.js';
 export { UserTrialRepository } from './repositories/user-trial.repository.js';
 
 // Services
