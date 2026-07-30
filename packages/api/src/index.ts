@@ -14,10 +14,14 @@ import { createChatRoutes } from './routes/chat.routes.js';
 import { createAuthRoutes } from './routes/auth.routes.js';
 import { createSpacesRoutes } from './routes/spaces.routes.js';
 import { createAdminRoutes } from './routes/admin.routes.js';
+import { createMcpTokenRoutes } from './routes/mcp-tokens.routes.js';
+import { createPlannerMcpApp } from './mcp/server.js';
+import { getMcpConfig, type McpConfig } from './mcp/config.js';
 
 interface CreateAppOptions {
   container?: ApiContainer;
   db?: DB;
+  mcpConfig?: McpConfig;
 }
 
 export function createApp(options?: CreateAppOptions) {
@@ -27,14 +31,16 @@ export function createApp(options?: CreateAppOptions) {
   }
 
   const app = new Hono();
+  const mcpConfig = options?.mcpConfig ?? getMcpConfig();
 
   // Global middleware
   app.use('*', cors({ origin: '*', credentials: true }));
   app.onError(errorHandler);
+  app.route('/mcp', createPlannerMcpApp(db, mcpConfig));
 
   // If a fixed container is provided (testing), use it directly
   if (options?.container) {
-    return createAppWithFixedContainer(app, options.container, db);
+    return createAppWithFixedContainer(app, options.container, db, mcpConfig);
   }
 
   // --- Auth routes (no auth, no space scoping) ---
@@ -57,6 +63,9 @@ export function createApp(options?: CreateAppOptions) {
   // --- Admin routes (requires admin role) ---
   app.route('/api/admin', createAdminRoutes(authContainer));
 
+  // --- User-managed MCP access grants ---
+  app.route('/api/mcp', createMcpTokenRoutes(authContainer, mcpConfig));
+
   // --- Space-scoped routes ---
   const spaceMiddleware = createSpaceMiddleware(db);
   const getContainer = (c: { get: (key: string) => unknown }) => c.get('scopedContainer') as ApiContainer;
@@ -76,10 +85,11 @@ export function createApp(options?: CreateAppOptions) {
 }
 
 // For testing: fixed container, flat routes (no space middleware)
-function createAppWithFixedContainer(app: Hono, container: ApiContainer, db: DB) {
+function createAppWithFixedContainer(app: Hono, container: ApiContainer, db: DB, mcpConfig: McpConfig) {
   const getContainer = () => container;
 
   app.route('/api/auth', createAuthRoutes(container));
+  app.route('/api/mcp', createMcpTokenRoutes(container, mcpConfig));
   app.route('/api/spaces', createSpacesRoutes(db));
   app.route('/api/spaces/:spaceId/areas', createAreasRoutes(getContainer));
   app.route('/api/spaces/:spaceId/goals', createGoalsRoutes(getContainer));
@@ -100,3 +110,6 @@ export { createStatusRoutes } from './routes/status.routes.js';
 export { createChatRoutes } from './routes/chat.routes.js';
 export { createAuthRoutes } from './routes/auth.routes.js';
 export { createSpacesRoutes } from './routes/spaces.routes.js';
+export { createMcpTokenRoutes } from './routes/mcp-tokens.routes.js';
+export { createPlannerMcpApp } from './mcp/server.js';
+export { getMcpConfig, type McpConfig } from './mcp/config.js';

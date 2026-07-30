@@ -7,6 +7,7 @@ primary_region = "iad"
   NODE_ENV = "production"
   PORT = "3000"
   PLANNER_HOME = "/data"
+  PLANNER_MCP_RESOURCE_URL = "https://ye-planner.fly.dev/mcp"
 
 [http_service]
   internal_port = 3000
