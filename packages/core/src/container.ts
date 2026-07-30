@@ -10,6 +10,7 @@ import { CompletionRepository } from './repositories/completion.repository.js';
 import { ConversationRepository } from './repositories/conversation.repository.js';
 import { MessageRepository } from './repositories/message.repository.js';
 import { SessionRepository } from './repositories/session.repository.js';
+import { McpTokenRepository } from './repositories/mcp-token.repository.js';
 import { SpaceService } from './services/space.service.js';
 import { InitService } from './services/init.service.js';
 import { AreaService } from './services/area.service.js';
@@ -20,6 +21,7 @@ import { ContextService } from './services/context.service.js';
 import { StatusService } from './services/status.service.js';
 import { ConfigService } from './services/config.service.js';
 import { ExportService } from './services/export.service.js';
+import { McpTokenService } from './services/mcp-token.service.js';
 
 export function createCoreContainer(db: DB, spaceId: string) {
   // Unscoped repositories
@@ -28,6 +30,7 @@ export function createCoreContainer(db: DB, spaceId: string) {
   const completionRepo = new CompletionRepository(db);
   const messageRepo = new MessageRepository(db);
   const sessionRepo = new SessionRepository(db);
+  const mcpTokenRepo = new McpTokenRepository(db);
 
   // Space-scoped repositories
   const areaRepo = new AreaRepository(db, spaceId);
@@ -47,6 +50,7 @@ export function createCoreContainer(db: DB, spaceId: string) {
   const statusService = new StatusService(taskService, habitService);
   const configService = new ConfigService();
   const exportService = new ExportService(contextService);
+  const mcpTokenService = new McpTokenService(mcpTokenRepo, spaceRepo);
 
   return {
     spaceId,
@@ -60,6 +64,7 @@ export function createCoreContainer(db: DB, spaceId: string) {
     statusService,
     configService,
     exportService,
+    mcpTokenService,
     // Exposed for consumer packages to extend
     conversationRepo,
     messageRepo,
@@ -86,6 +91,15 @@ export function createTestContainer(db: DB, spaceId: string): CoreContainer {
 }
 
 function resolveSpaceId(db: DB, configService: ConfigService): string {
+  const spacesTable = db.all(sql`
+    SELECT name FROM sqlite_master
+    WHERE type = 'table' AND name = 'spaces'
+    LIMIT 1
+  `);
+  if (spacesTable.length === 0) {
+    return '__uninitialized__';
+  }
+
   // 1. Check config file for a saved space
   const savedId = configService.getCurrentSpaceId();
   if (savedId) {

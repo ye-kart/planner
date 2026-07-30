@@ -16,6 +16,7 @@ export type {
   Conversation, NewConversation,
   Message, NewMessage,
   Session, NewSession,
+  McpToken, NewMcpToken,
   AllowedUser, NewAllowedUser,
   UserTrial, NewUserTrial,
 } from './db/schema.js';
@@ -31,6 +32,7 @@ export { CompletionRepository } from './repositories/completion.repository.js';
 export { ConversationRepository } from './repositories/conversation.repository.js';
 export { MessageRepository } from './repositories/message.repository.js';
 export { SessionRepository } from './repositories/session.repository.js';
+export { McpTokenRepository } from './repositories/mcp-token.repository.js';
 export { AllowedUserRepository } from './repositories/allowed-user.repository.js';
 export { UserTrialRepository } from './repositories/user-trial.repository.js';
 
@@ -46,6 +48,13 @@ export { ConfigService, type ChatConfig } from './services/config.service.js';
 export { ExportService } from './services/export.service.js';
 export { InitService } from './services/init.service.js';
 export { TrialService, TRIAL_DURATION_DAYS, type TrialStatus, type TrialStatusState } from './services/trial.service.js';
+export {
+  McpTokenService,
+  MCP_SCOPES,
+  type McpScope,
+  type CreateMcpTokenInput,
+  type CreatedMcpToken,
+} from './services/mcp-token.service.js';
 export { calculateStreaks, type StreakResult } from './services/streak.js';
 
 // Container

@@ -99,6 +99,22 @@ export const sessions = sqliteTable('sessions', {
   createdAt: text('created_at').notNull(),
 });
 
+export const mcpTokens = sqliteTable('mcp_tokens', {
+  id: text('id').primaryKey(),
+  tokenHash: text('token_hash').notNull(),
+  name: text('name').notNull(),
+  userId: text('user_id').notNull(),
+  spaceId: text('space_id').notNull().references(() => spaces.id, { onDelete: 'cascade' }),
+  scopes: text('scopes').notNull(),
+  resource: text('resource').notNull(),
+  expiresAt: text('expires_at').notNull(),
+  lastUsedAt: text('last_used_at'),
+  revokedAt: text('revoked_at'),
+  createdAt: text('created_at').notNull(),
+}, table => ({
+  tokenHashIdx: uniqueIndex('mcp_tokens_token_hash_idx').on(table.tokenHash),
+}));
+
 export const allowedUsers = sqliteTable('allowed_users', {
   id: text('id').primaryKey(),
   provider: text('provider', { enum: ['github', 'google'] }).notNull(),
@@ -141,6 +157,8 @@ export type Message = typeof messages.$inferSelect;
 export type NewMessage = typeof messages.$inferInsert;
 export type Session = typeof sessions.$inferSelect;
 export type NewSession = typeof sessions.$inferInsert;
+export type McpToken = typeof mcpTokens.$inferSelect;
+export type NewMcpToken = typeof mcpTokens.$inferInsert;
 export type AllowedUser = typeof allowedUsers.$inferSelect;
 export type NewAllowedUser = typeof allowedUsers.$inferInsert;
 export type UserTrial = typeof userTrials.$inferSelect;

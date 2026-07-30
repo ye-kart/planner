@@ -7,9 +7,10 @@ interface ConfirmDialogProps {
   message: string;
   onConfirm: () => void;
   onCancel: () => void;
+  confirmLabel?: string;
 }
 
-export function ConfirmDialog({ open, title, message, onConfirm, onCancel }: ConfirmDialogProps) {
+export function ConfirmDialog({ open, title, message, onConfirm, onCancel, confirmLabel = 'Delete' }: ConfirmDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const setOverlayOpen = useKeyboardStore((s) => s.setOverlayOpen);
 
@@ -46,7 +47,7 @@ export function ConfirmDialog({ open, title, message, onConfirm, onCancel }: Con
             onClick={onConfirm}
             className="px-4 py-2 text-sm rounded-lg bg-[var(--color-error)] text-white hover:opacity-90 active:opacity-80 transition-opacity"
           >
-            Delete
+            {confirmLabel}
           </button>
         </div>
       </div>

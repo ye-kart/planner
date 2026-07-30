@@ -34,6 +34,7 @@ Habits:
 - **Habits** — Recurring activities with frequency scheduling and streak tracking
 - **Dashboard** — Daily overview of what's due and how you're doing
 - **AI Chat** — Embedded assistant that can read, create, and modify your plans via natural language
+- **MCP server** — Connect external AI agents with revocable, space-bound read/write access
 - **Document Import** — Feed the AI a Markdown file and get smart suggestions (no duplicates)
 - **Web App** — Full-featured React SPA with the same 7 color themes, keyboard shortcuts, and AI chat
 - **AI-ready** — `plan context` commands return full JSON trees for agent integration
@@ -74,7 +75,7 @@ fly deploy
 
 ### Requirements
 
-- Node.js >= 18
+- Node.js >= 20
 - pnpm >= 9
 
 ## Quick start
@@ -375,6 +376,73 @@ Endpoints:
 
 Payment processing is not yet wired up — the trial ships first so the full login→use→paywall flow can be exercised end-to-end before money moves.
 
+## MCP server (external AI agents)
+
+Planner exposes a remote [Model Context Protocol](https://modelcontextprotocol.io/) endpoint at `/mcp`. Compatible agents can read and manage one Planner space using an explicit grant created by a signed-in Planner user.
+
+### Connect an agent
+
+1. In the web app, open **Agent access** for the space you want to share.
+2. Name the connection, choose **Read**, **Write**, or both, and select a 7, 30, or 90 day expiry.
+3. Create the connection and copy the token immediately. Planner stores only its SHA-256 hash and cannot show the secret again.
+4. Configure the agent with the displayed MCP resource URL and send the token in every request:
+
+```http
+Authorization: Bearer pln_mcp_...
+```
+
+A representative client configuration looks like this (exact keys vary by agent):
+
+```json
+{
+  "mcpServers": {
+    "planner": {
+      "type": "http",
+      "url": "https://planner.example.com/mcp",
+      "headers": {
+        "Authorization": "Bearer ${PLANNER_MCP_TOKEN}"
+      }
+    }
+  }
+}
+```
+
+Keep the token in the client’s secret store or an environment variable, not in source control. Revoke it at any time from **Agent access**.
+
+This first release uses user-created bearer grants. The client must support a custom `Authorization` header; automatic OAuth discovery and browser consent are not implemented yet.
+
+### Permissions and tools
+
+Each grant is bound to exactly one space and the configured `/mcp` resource URL.
+
+| Scope | Tools |
+|-------|-------|
+| `planner:read` | `get_today`, list/get areas, goals, tasks, and habits |
+| `planner:write` | Create/update areas, goals, tasks, and habits; set goal progress; add/set milestones; set habit completion |
+
+The MCP server deliberately does **not** expose permanent deletion, space management, AI chat, conversation history, or local file/document access. List and today-status collections are limited to 100 items per call; related collections in detail responses are capped at 100, habit details include at most 30 recent completions, and HTTP request bodies are capped at 256 KiB.
+
+Authentication errors use HTTP `401` for a missing, malformed, expired, revoked, or wrong-resource token. Invalid browser origins and hosts are rejected with `403`. Domain validation failures are returned as MCP tool errors without stack traces.
+
+### Server configuration
+
+Production must set the canonical HTTPS endpoint before users can create grants:
+
+```bash
+PLANNER_MCP_RESOURCE_URL=https://planner.example.com/mcp
+```
+
+The resource hostname is automatically allowed. Add comma-separated hostnames only when a trusted proxy or browser client uses another hostname:
+
+```bash
+PLANNER_MCP_ALLOWED_HOSTS=internal-proxy.example.com
+PLANNER_MCP_ALLOWED_ORIGINS=trusted-agent.example.com
+```
+
+In local development the default is `http://localhost:3000/mcp`. MCP access is disabled in production when `PLANNER_MCP_RESOURCE_URL` is missing or invalid. The conventional management API is `GET/POST /api/mcp/tokens` and `DELETE /api/mcp/tokens/:id`; it accepts only the signed-in user’s own grants.
+
+The included Fly deployment sets this to `https://ye-planner.fly.dev/mcp` in `fly.toml`, so MCP runs in the same application, process, database, and monitoring surface as the existing Planner API.
+
 ## JSON output
 
 Every command (except `context`, which is always JSON) supports `--json`:
@@ -441,6 +509,9 @@ When `PLANNER_GITHUB_CLIENT_ID` is set, the web app requires GitHub OAuth login.
 | `PLANNER_GITHUB_CLIENT_ID` | — | GitHub OAuth app client ID (enables web auth) |
 | `PLANNER_GITHUB_CLIENT_SECRET` | — | GitHub OAuth app client secret |
 | `PLANNER_ALLOWED_GITHUB_USERS` | — | Comma-separated GitHub usernames allowed to log in |
+| `PLANNER_MCP_RESOURCE_URL` | local `/mcp` URL; required in production | Canonical HTTPS MCP endpoint used for token audience binding |
+| `PLANNER_MCP_ALLOWED_HOSTS` | resource hostname | Additional trusted MCP request hostnames |
+| `PLANNER_MCP_ALLOWED_ORIGINS` | resource hostname | Additional trusted browser-origin hostnames |
 | `PORT` | `3000` | API server port |
 
 The database is a single SQLite file at `$PLANNER_HOME/planner.db`.
@@ -484,6 +555,7 @@ Areas
 | CLI framework | [Commander.js](https://github.com/tj/commander.js/) |
 | TUI framework | [Ink](https://github.com/vadimdemedes/ink) (React for CLI) |
 | API server | [Hono](https://hono.dev/) + @hono/node-server |
+| Agent integration | MCP Streamable HTTP via the official TypeScript SDK |
 | Web frontend | React + [Vite](https://vite.dev/) + [Tailwind CSS v4](https://tailwindcss.com/) |
 | UI components | [shadcn/ui](https://ui.shadcn.com/) |
 | Server state | [TanStack Query v5](https://tanstack.com/query) |

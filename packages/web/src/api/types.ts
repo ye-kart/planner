@@ -132,3 +132,29 @@ export interface AuthMe {
   isAdmin?: boolean;
   trial?: TrialStatus;
 }
+
+export type McpTokenScope = 'planner:read' | 'planner:write';
+
+export interface McpTokenSummary {
+  id: string;
+  name: string;
+  userId: string;
+  spaceId: string;
+  scopes: McpTokenScope[];
+  resource: string;
+  expiresAt: string;
+  lastUsedAt: string | null;
+  createdAt: string;
+  revokedAt: string | null;
+}
+
+export interface McpTokenListResponse {
+  tokens: McpTokenSummary[];
+  resourceUrl: string;
+}
+
+export interface McpTokenCreateResponse {
+  token: string;
+  grant: McpTokenSummary;
+  resourceUrl: string;
+}

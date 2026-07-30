@@ -4,7 +4,7 @@
   "type": "module",
   "license": "MIT",
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "scripts": {
     "build": "pnpm -r build",
@@ -17,12 +17,13 @@
     "lint": "pnpm -r lint"
   },
   "devDependencies": {
+    "@modelcontextprotocol/client": "2.0.0",
     "@types/better-sqlite3": "^7.6.12",
     "@types/node": "^22.13.1",
     "@types/react": "^18.3.28",
-    "react": "^18.3.1",
     "drizzle-kit": "^0.30.4",
     "ink-testing-library": "^4.0.0",
+    "react": "^18.3.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
     "vitest": "^3.0.5"

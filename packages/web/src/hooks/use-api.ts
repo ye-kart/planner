@@ -6,7 +6,9 @@ import { tasksApi } from '../api/tasks.api';
 import { habitsApi } from '../api/habits.api';
 import { statusApi } from '../api/status.api';
 import { authApi } from '../api/auth.api';
+import { mcpApi } from '../api/mcp.api';
 import { useCurrentSpace } from '../contexts/space-context';
+import type { McpTokenScope } from '../api/types';
 
 // --- Auth / trial ---
 export function useAuthMe() {
@@ -244,4 +246,35 @@ export function useUncheckHabit() {
 export function useStatus() {
   const { spaceId } = useCurrentSpace();
   return useQuery({ queryKey: ['spaces', spaceId, 'status'], queryFn: () => statusApi.get(spaceId) });
+}
+
+// --- MCP agent access ---
+export function useMcpTokens() {
+  const { spaceId } = useCurrentSpace();
+  return useQuery({
+    queryKey: ['spaces', spaceId, 'mcp-tokens'],
+    queryFn: () => mcpApi.listTokens(spaceId),
+  });
+}
+
+export function useCreateMcpToken() {
+  const { spaceId } = useCurrentSpace();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      name: string;
+      scopes: McpTokenScope[];
+      expiresInDays: number;
+    }) => mcpApi.createToken({ ...data, spaceId }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['spaces', spaceId, 'mcp-tokens'] }),
+  });
+}
+
+export function useRevokeMcpToken() {
+  const { spaceId } = useCurrentSpace();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: mcpApi.revokeToken,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['spaces', spaceId, 'mcp-tokens'] }),
+  });
 }
