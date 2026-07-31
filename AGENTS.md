@@ -139,7 +139,25 @@ Three layers, all use Vitest with globals enabled (no imports needed for describ
 
 For context commands in E2E tests, use `runCliParseJson()` (doesn't append `--json` flag).
 
+## Branching Workflow
+
+- `main` is the stable branch. Do not commit directly to it.
+- `development` is the long-lived integration branch. Create feature and fix
+  branches from current `development` and target their pull requests back to
+  `development`.
+- Small, low-risk maintenance changes (for example, `AGENTS.md`, documentation,
+  or configuration updates) may be committed directly to `development` after
+  reviewing the diff and running proportionate validation.
+- Promote `development` to `main` through a pull request when a set of changes
+  is ready.
+
 ## Git Commits
+
+Use the `gh` CLI for all GitHub operations.
+
+Before creating a commit, verify that Git is using the personal account email
+`yeghishe.kartashyan@gmail.com` (`git config user.email`). If necessary, set it
+for this repository before committing.
 
 Every commit message starts with a meaningful emoji. Imperative mood, under 72 chars.
 
