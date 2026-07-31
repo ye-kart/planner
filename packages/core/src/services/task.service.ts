@@ -74,6 +74,12 @@ export class TaskService {
     if (updates.priority && !validPriorities.includes(updates.priority)) {
       throw new ValidationError(`Priority must be one of: ${validPriorities.join(', ')}`);
     }
+    if (updates.areaId && !this.areaRepo.findById(updates.areaId)) {
+      throw new NotFoundError('Area', updates.areaId);
+    }
+    if (updates.goalId && !this.goalRepo.findById(updates.goalId)) {
+      throw new NotFoundError('Goal', updates.goalId);
+    }
 
     // completedAt auto-management
     const updateData: any = { ...updates };

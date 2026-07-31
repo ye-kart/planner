@@ -114,6 +114,20 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             </button>
           );
         })}
+        <div className="mx-4 my-2 border-t border-[var(--color-border)]" />
+        <button
+          onClick={() => { navigate(`${basePath}/integrations`); onClose(); }}
+          aria-current={location.pathname.startsWith(`${basePath}/integrations`) ? 'page' : undefined}
+          className={`w-full text-left px-4 py-2 flex items-center gap-3 text-sm transition-colors ${
+            location.pathname.startsWith(`${basePath}/integrations`)
+              ? 'bg-[var(--color-bg-highlight)] text-[var(--color-tab-active)] border-r-2 border-[var(--color-tab-active)]'
+              : 'text-[var(--color-tab-inactive)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-highlight)]'
+          }`}
+        >
+          <span className="w-3 font-mono text-xs text-[var(--color-text-secondary)]" aria-hidden="true">·</span>
+          <span className="font-mono" aria-hidden="true">@</span>
+          <span>Agent access</span>
+        </button>
       </nav>
 
       <div className="p-4 border-t border-[var(--color-border)] space-y-2">

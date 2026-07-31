@@ -1,6 +1,15 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createTestDb, createTestSpace } from './helpers/db.js';
-import { AreaRepository, GoalRepository, HabitRepository, CompletionRepository, HabitService, type DB } from '@planner/core';
+import {
+  AreaRepository,
+  GoalRepository,
+  HabitRepository,
+  CompletionRepository,
+  HabitService,
+  addDays,
+  today,
+  type DB,
+} from '@planner/core';
 
 let db: DB;
 let spaceId: string;
@@ -68,9 +77,10 @@ describe('HabitService', () => {
 
   it('updates streaks on check', () => {
     const habit = habitService.add('Meditate');
-    habitService.check(habit.id, '2026-02-08');
-    habitService.check(habit.id, '2026-02-09');
-    habitService.check(habit.id, '2026-02-10');
+    const currentDate = today();
+    habitService.check(habit.id, addDays(currentDate, -2));
+    habitService.check(habit.id, addDays(currentDate, -1));
+    habitService.check(habit.id, currentDate);
 
     const detail = habitService.show(habit.id);
     expect(detail.currentStreak).toBeGreaterThan(0);

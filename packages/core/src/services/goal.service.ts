@@ -146,6 +146,18 @@ export class GoalService {
     return updated;
   }
 
+  setMilestoneDone(msId: string, done: boolean): Milestone {
+    const milestone = this.milestoneRepo.findById(msId);
+    if (!milestone || !this.goalRepo.findById(milestone.goalId)) {
+      throw new NotFoundError('Milestone', msId);
+    }
+    if (milestone.done === done) return milestone;
+
+    const updated = this.milestoneRepo.update(msId, { done })!;
+    this.recalcProgress(milestone.goalId);
+    return updated;
+  }
+
   removeMilestone(msId: string): void {
     const ms = this.milestoneRepo.findById(msId);
     if (!ms) throw new NotFoundError('Milestone', msId);

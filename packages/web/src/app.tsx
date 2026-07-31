@@ -12,6 +12,7 @@ import { LoginPage } from './pages/login';
 import { SpacesPage } from './pages/spaces';
 import { AdminPage } from './pages/admin';
 import { SubscribePage } from './pages/subscribe';
+import { IntegrationsPage } from './pages/integrations';
 import { useKeyboard } from './hooks/use-keyboard';
 
 const queryClient = new QueryClient({
@@ -41,6 +42,7 @@ export function App() {
             <Route path="goals" element={<GoalsPage />} />
             <Route path="tasks" element={<TasksPage />} />
             <Route path="habits" element={<HabitsPage />} />
+            <Route path="integrations" element={<IntegrationsPage />} />
           </Route>
           {/* Catch-all redirect for old routes */}
           <Route path="*" element={<Navigate to="/" replace />} />

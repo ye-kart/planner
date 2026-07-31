@@ -91,15 +91,29 @@ export class HabitService {
     if (updates.title !== undefined && (updates.title.length === 0 || updates.title.length > 200)) {
       throw new ValidationError('Habit title must be 1-200 characters');
     }
+    const validFrequencies = ['daily', 'weekly', 'specific_days'];
+    if (updates.frequency && !validFrequencies.includes(updates.frequency)) {
+      throw new ValidationError(`Frequency must be one of: ${validFrequencies.join(', ')}`);
+    }
+    if (updates.frequency === 'specific_days' && (!updates.days || updates.days.length === 0)) {
+      throw new ValidationError('Days are required for specific_days frequency');
+    }
+    if (updates.days && updates.days.some(day => !Number.isInteger(day) || day < 0 || day > 6)) {
+      throw new ValidationError('Days must contain integers from 0 (Sunday) to 6 (Saturday)');
+    }
+    if (updates.areaId && !this.areaRepo.findById(updates.areaId)) {
+      throw new NotFoundError('Area', updates.areaId);
+    }
+    if (updates.goalId && !this.goalRepo.findById(updates.goalId)) {
+      throw new NotFoundError('Goal', updates.goalId);
+    }
 
-    const updateData: any = { ...updates };
-    if (updates.days) {
-      updateData.days = JSON.stringify(updates.days);
-    }
-    delete updateData.days;
-    if (updates.days) {
-      updateData.days = JSON.stringify(updates.days);
-    }
+    const updateData: Parameters<HabitRepository['update']>[1] = {};
+    if (updates.title !== undefined) updateData.title = updates.title;
+    if (updates.frequency !== undefined) updateData.frequency = updates.frequency as Habit['frequency'];
+    if (updates.days !== undefined) updateData.days = JSON.stringify(updates.days);
+    if (updates.areaId !== undefined) updateData.areaId = updates.areaId;
+    if (updates.goalId !== undefined) updateData.goalId = updates.goalId;
 
     return this.habitRepo.update(id, updateData)!;
   }
@@ -135,6 +149,28 @@ export class HabitService {
     }
 
     this.updateStreaks(id);
+  }
+
+  setCompletion(id: string, completed: boolean, date?: string): { date: string; completed: boolean } {
+    const habit = this.habitRepo.findById(id);
+    if (!habit) throw new NotFoundError('Habit', id);
+
+    const completionDate = date ?? today();
+    const existing = this.completionRepo.findByHabitIdAndDate(id, completionDate);
+
+    if (completed && !existing) {
+      this.completionRepo.create({
+        id: generateId(),
+        habitId: id,
+        date: completionDate,
+      });
+      this.updateStreaks(id);
+    } else if (!completed && existing) {
+      this.completionRepo.delete(existing.id);
+      this.updateStreaks(id);
+    }
+
+    return { date: completionDate, completed };
   }
 
   archive(id: string): Habit {

@@ -94,6 +94,20 @@ const STATEMENTS = [
     expires_at TEXT NOT NULL,
     created_at TEXT NOT NULL
   )`,
+  `CREATE TABLE IF NOT EXISTS mcp_tokens (
+    id TEXT PRIMARY KEY,
+    token_hash TEXT NOT NULL,
+    name TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    space_id TEXT NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+    scopes TEXT NOT NULL,
+    resource TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    last_used_at TEXT,
+    revoked_at TEXT,
+    created_at TEXT NOT NULL
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS mcp_tokens_token_hash_idx ON mcp_tokens(token_hash)`,
   `CREATE TABLE IF NOT EXISTS allowed_users (
     id TEXT PRIMARY KEY,
     provider TEXT NOT NULL DEFAULT 'github',
