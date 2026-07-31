@@ -496,7 +496,7 @@ Single-character shortcuts are suppressed when an input field is focused.
 
 ### Authentication
 
-When `PLANNER_GITHUB_CLIENT_ID` is set, the web app requires GitHub OAuth login. Set `PLANNER_ALLOWED_GITHUB_USERS` to a comma-separated list of GitHub usernames allowed to access the app.
+Planner supports GitHub OAuth, Google OAuth, and email/password sign-in. Configure at least one provider to require authentication. Email/password registration uses Resend and requires email verification before a user can sign in; password-reset links expire after one hour.
 
 ## Configuration
 
@@ -509,6 +509,10 @@ When `PLANNER_GITHUB_CLIENT_ID` is set, the web app requires GitHub OAuth login.
 | `PLANNER_GITHUB_CLIENT_ID` | — | GitHub OAuth app client ID (enables web auth) |
 | `PLANNER_GITHUB_CLIENT_SECRET` | — | GitHub OAuth app client secret |
 | `PLANNER_ALLOWED_GITHUB_USERS` | — | Comma-separated GitHub usernames allowed to log in |
+| `PLANNER_GOOGLE_CLIENT_ID` | — | Google OAuth client ID |
+| `PLANNER_GOOGLE_CLIENT_SECRET` | — | Google OAuth client secret |
+| `PLANNER_RESEND_API_KEY` | — | Resend API key for verification and reset emails |
+| `PLANNER_EMAIL_FROM` | — | Verified sender, e.g. `Planner <accounts@example.com>` |
 | `PLANNER_MCP_RESOURCE_URL` | local `/mcp` URL; required in production | Canonical HTTPS MCP endpoint used for token audience binding |
 | `PLANNER_MCP_ALLOWED_HOSTS` | resource hostname | Additional trusted MCP request hostnames |
 | `PLANNER_MCP_ALLOWED_ORIGINS` | resource hostname | Additional trusted browser-origin hostnames |

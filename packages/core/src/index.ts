@@ -18,6 +18,8 @@ export type {
   Session, NewSession,
   McpToken, NewMcpToken,
   AllowedUser, NewAllowedUser,
+  PasswordCredential, NewPasswordCredential,
+  EmailToken, NewEmailToken,
   UserTrial, NewUserTrial,
 } from './db/schema.js';
 
@@ -34,6 +36,8 @@ export { MessageRepository } from './repositories/message.repository.js';
 export { SessionRepository } from './repositories/session.repository.js';
 export { McpTokenRepository } from './repositories/mcp-token.repository.js';
 export { AllowedUserRepository } from './repositories/allowed-user.repository.js';
+export { PasswordCredentialRepository } from './repositories/password-credential.repository.js';
+export { EmailTokenRepository } from './repositories/email-token.repository.js';
 export { UserTrialRepository } from './repositories/user-trial.repository.js';
 
 // Services

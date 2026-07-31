@@ -123,6 +123,24 @@ export const allowedUsers = sqliteTable('allowed_users', {
   createdAt: text('created_at').notNull(),
 });
 
+export const passwordCredentials = sqliteTable('password_credentials', {
+  email: text('email').primaryKey(),
+  passwordHash: text('password_hash').notNull(),
+  verifiedAt: text('verified_at'),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+});
+
+export const emailTokens = sqliteTable('email_tokens', {
+  id: text('id').primaryKey(),
+  email: text('email').notNull(),
+  tokenHash: text('token_hash').notNull().unique(),
+  purpose: text('purpose', { enum: ['verify_email', 'reset_password'] }).notNull(),
+  expiresAt: text('expires_at').notNull(),
+  usedAt: text('used_at'),
+  createdAt: text('created_at').notNull(),
+});
+
 export const userTrials = sqliteTable('user_trials', {
   userId: text('user_id').primaryKey(),
   trialStartedAt: text('trial_started_at').notNull(),
@@ -161,5 +179,9 @@ export type McpToken = typeof mcpTokens.$inferSelect;
 export type NewMcpToken = typeof mcpTokens.$inferInsert;
 export type AllowedUser = typeof allowedUsers.$inferSelect;
 export type NewAllowedUser = typeof allowedUsers.$inferInsert;
+export type PasswordCredential = typeof passwordCredentials.$inferSelect;
+export type NewPasswordCredential = typeof passwordCredentials.$inferInsert;
+export type EmailToken = typeof emailTokens.$inferSelect;
+export type NewEmailToken = typeof emailTokens.$inferInsert;
 export type UserTrial = typeof userTrials.$inferSelect;
 export type NewUserTrial = typeof userTrials.$inferInsert;
