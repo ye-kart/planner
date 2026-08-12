@@ -1,11 +1,10 @@
 import { Link } from 'react-router-dom';
 import { useTrial } from '../../hooks/use-api';
+import { shouldShowTrialBanner } from '../../utils/billing';
 
 export function TrialBanner() {
   const { data } = useTrial();
-  if (!data) return null;
-  // 'none' = no/expired session (e.g. auth disabled); show no banner.
-  if (data.state === 'admin' || data.state === 'active' || data.state === 'none') return null;
+  if (!data || !shouldShowTrialBanner(data)) return null;
 
   if (data.state === 'trial_expired') {
     return (

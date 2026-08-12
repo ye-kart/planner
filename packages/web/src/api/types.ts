@@ -114,10 +114,11 @@ export interface Message {
   position: number;
 }
 
-export type TrialStatusState = 'trial' | 'trial_expired' | 'active' | 'admin' | 'none';
+export type TrialStatusState = 'trial' | 'trial_expired' | 'active' | 'admin' | 'free' | 'none';
 
 export interface TrialStatus {
   state: TrialStatusState;
+  billingEnabled: boolean;
   trialStartedAt: string | null;
   trialExpiresAt: string | null;
   subscriptionExpiresAt: string | null;

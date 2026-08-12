@@ -365,16 +365,16 @@ Supported file types: `.md`, `.txt`, `.json`, `.csv`, `.yaml`, `.yml`
 
 Works with any OpenAI-compatible API, including Ollama — see [Configuration](#configuration) for env vars.
 
-#### Free trial & subscriptions (web app)
+#### Free access and optional billing mode (web app)
 
-New users get **7 days of free AI access** on their first login. When the trial runs out, AI chat returns `402 Payment Required` and the UI prompts the user to subscribe. Planned pricing: **€1/month** or **€10/year** for unlimited AI usage. Admins (users marked `is_admin=1` in `allowed_users`) always bypass the gate.
+Billing is disabled by default, so authenticated users can use every configured Planner feature, including AI chat, without a trial or subscription. The existing trial and subscription flow is preserved behind `PLANNER_BILLING_ENABLED=true` for future use; when enabled, new users get 7 days of AI access before the existing `402 Payment Required` gate applies. Admins (users marked `is_admin=1` in `allowed_users`) always bypass that gate.
 
 Endpoints:
 
-- `GET /api/auth/me` — includes `trial` state (`trial` / `trial_expired` / `active` / `admin`) and days remaining
-- `GET /api/auth/trial` — standalone trial status
+- `GET /api/auth/me` — includes access state; free mode reports `free` with AI access enabled
+- `GET /api/auth/trial` — standalone access/trial status, including whether billing is enabled
 
-Payment processing is not yet wired up — the trial ships first so the full login→use→paywall flow can be exercised end-to-end before money moves.
+Payment processing is not wired up. Keep billing disabled unless the preserved trial/subscription flow is intentionally being exercised.
 
 ## MCP server (external AI agents)
 
@@ -506,6 +506,7 @@ Planner supports GitHub OAuth, Google OAuth, and email/password sign-in. Configu
 | `PLANNER_AI_API_KEY` | — | API key (required for AI chat) |
 | `PLANNER_AI_BASE_URL` | `https://api.openai.com/v1` | API base URL (set to `http://localhost:11434/v1` for Ollama) |
 | `PLANNER_AI_MODEL` | `gpt-4o` | Model name (e.g., `mistral` for Ollama) |
+| `PLANNER_BILLING_ENABLED` | `false` | Set to `true` only to enable the preserved trial/subscription gate |
 | `PLANNER_GITHUB_CLIENT_ID` | — | GitHub OAuth app client ID (enables web auth) |
 | `PLANNER_GITHUB_CLIENT_SECRET` | — | GitHub OAuth app client secret |
 | `PLANNER_ALLOWED_GITHUB_USERS` | — | Comma-separated GitHub usernames allowed to log in |
