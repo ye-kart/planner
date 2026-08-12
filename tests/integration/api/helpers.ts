@@ -33,10 +33,14 @@ export function createTestApiContainer(db: DB, spaceId: string): ApiContainer {
   return { ...core, chatService, sessionRepo, passwordCredentialRepo, emailTokenRepo, allowedUserRepo, userTrialRepo, trialService, spaceService };
 }
 
-export function createTestApp() {
+export function createTestApp(options?: { billingEnabled?: boolean }) {
   const db = createTestDb();
   const spaceId = createTestSpace(db);
   const container = createTestApiContainer(db, spaceId);
-  const { app } = createApp({ container, db });
+  const { app } = createApp({
+    container,
+    db,
+    billingConfig: { enabled: options?.billingEnabled ?? false },
+  });
   return { app, container, db, spaceId };
 }

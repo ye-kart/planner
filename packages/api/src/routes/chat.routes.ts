@@ -2,16 +2,35 @@ import { Hono } from 'hono';
 import { streamSSE } from 'hono/streaming';
 import type { Context } from 'hono';
 import type { ApiContainer } from '../container.js';
+import {
+  createBillingAccessStatus,
+  createFreeAccessStatus,
+  getBillingConfig,
+  type BillingConfig,
+} from '../config/billing.js';
 
 type ContainerGetter = (c: Context) => ApiContainer;
+type UserIdGetter = (c: Context) => string | undefined;
 
-export function createChatRoutes(getContainer: ContainerGetter): Hono {
+const getContextUserId: UserIdGetter = (c) => (
+  c as { get: (key: string) => unknown }
+).get('userId') as string | undefined;
+
+export function createChatRoutes(
+  getContainer: ContainerGetter,
+  billingConfig: BillingConfig = getBillingConfig(),
+  getUserId: UserIdGetter = getContextUserId,
+): Hono {
   const app = new Hono();
 
   app.get('/configured', (c) => {
     const { chatService, trialService } = getContainer(c);
-    const userId = (c as { get: (key: string) => unknown }).get('userId') as string | undefined;
-    const trial = userId ? trialService.getStatus(userId) : null;
+    const userId = getUserId(c);
+    const trial = userId
+      ? billingConfig.enabled
+        ? createBillingAccessStatus(trialService.getStatus(userId))
+        : createFreeAccessStatus()
+      : null;
     return c.json({
       configured: chatService.isConfigured(),
       trial,
@@ -51,8 +70,8 @@ export function createChatRoutes(getContainer: ContainerGetter): Hono {
 
   app.post('/conversations/:id/messages', (c) => {
     const { chatService, trialService } = getContainer(c);
-    const userId = (c as { get: (key: string) => unknown }).get('userId') as string | undefined;
-    if (userId) {
+    const userId = getUserId(c);
+    if (billingConfig.enabled && userId) {
       const status = trialService.getStatus(userId);
       if (!status.hasAiAccess) {
         return c.json(

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { createChatRoutes } from '../../packages/api/src/routes/chat.routes';
 
 interface Callbacks {
@@ -12,9 +12,30 @@ interface Callbacks {
 type SendMessage = (id: string, message: string, screen: string, cb: Callbacks) => Promise<void>;
 
 // Minimal stand-in for ApiContainer — these routes only reach for chatService.
-function routesWith(sendMessage: SendMessage) {
-  const getContainer = () => ({ chatService: { sendMessage } });
-  return createChatRoutes(getContainer as unknown as Parameters<typeof createChatRoutes>[0]);
+function routesWith(
+  sendMessage: SendMessage,
+  options?: { billingEnabled?: boolean; userId?: string },
+) {
+  const getContainer = () => ({
+    chatService: { sendMessage },
+    trialService: {
+      getStatus: () => ({
+        state: 'trial_expired',
+        trialStartedAt: null,
+        trialExpiresAt: null,
+        subscriptionExpiresAt: null,
+        plan: null,
+        daysRemaining: 0,
+        hasAiAccess: false,
+      }),
+    },
+  });
+  const routes = createChatRoutes(
+    getContainer as unknown as Parameters<typeof createChatRoutes>[0],
+    { enabled: options?.billingEnabled ?? false },
+    () => options?.userId,
+  );
+  return routes;
 }
 
 async function post(app: ReturnType<typeof createChatRoutes>) {
@@ -62,5 +83,30 @@ describe('chat SSE stream', () => {
 
     expect(body.indexOf('tool_call')).toBeLessThan(body.indexOf('tool_result'));
     expect(body.indexOf('tool_result')).toBeLessThan(body.indexOf('event: complete'));
+  });
+
+  it('allows an expired user to chat when billing is disabled', async () => {
+    const sendMessage = vi.fn<SendMessage>(async (_id, _m, _s, cb) => cb.onComplete('free access'));
+    const app = routesWith(sendMessage, { userId: 'github:alice' });
+
+    const body = await post(app);
+
+    expect(sendMessage).toHaveBeenCalledOnce();
+    expect(body).toContain('data: free access');
+  });
+
+  it('preserves the 402 gate when billing is explicitly enabled', async () => {
+    const sendMessage = vi.fn<SendMessage>();
+    const app = routesWith(sendMessage, { billingEnabled: true, userId: 'github:alice' });
+
+    const response = await app.request('/conversations/c1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'hi', currentScreen: 'web' }),
+    });
+
+    expect(response.status).toBe(402);
+    expect(await response.json()).toMatchObject({ error: expect.stringContaining('Trial expired') });
+    expect(sendMessage).not.toHaveBeenCalled();
   });
 });

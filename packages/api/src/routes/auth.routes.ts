@@ -2,8 +2,18 @@ import { Hono } from 'hono';
 import { generateId, normalizeUsername } from '@planner/core';
 import type { ApiContainer } from '../container.js';
 import { createToken, hashPassword, hashToken, isValidEmail, normalizeEmail, sendResendEmail, validatePassword, verifyPassword } from '../services/password-auth.js';
+import {
+  createAnonymousAccessStatus,
+  createBillingAccessStatus,
+  createFreeAccessStatus,
+  getBillingConfig,
+  type BillingConfig,
+} from '../config/billing.js';
 
-export function createAuthRoutes(container: ApiContainer): Hono {
+export function createAuthRoutes(
+  container: ApiContainer,
+  billingConfig: BillingConfig = getBillingConfig(),
+): Hono {
   const app = new Hono();
   const { sessionRepo, passwordCredentialRepo, emailTokenRepo, allowedUserRepo, trialService } = container;
 
@@ -50,7 +60,7 @@ export function createAuthRoutes(container: ApiContainer): Hono {
     if (!credential.verifiedAt) return c.json({ error: 'Verify your email before signing in' }, 403);
     const session = createSession(sessionRepo, `email:${email}`);
     setSessionCookie(c, session.id);
-    trialService.ensureTrial(`email:${email}`);
+    if (billingConfig.enabled) trialService.ensureTrial(`email:${email}`);
     return c.json({ ok: true });
   });
 
@@ -129,7 +139,7 @@ export function createAuthRoutes(container: ApiContainer): Hono {
     }
 
     const userId = `github:${login}`;
-    trialService.ensureTrial(userId);
+    if (billingConfig.enabled) trialService.ensureTrial(userId);
 
     // Create session
     const session = createSession(sessionRepo, userId);
@@ -200,7 +210,7 @@ export function createAuthRoutes(container: ApiContainer): Hono {
     }
 
     const userId = `google:${email}`;
-    trialService.ensureTrial(userId);
+    if (billingConfig.enabled) trialService.ensureTrial(userId);
 
     // Create session
     const session = createSession(sessionRepo, userId);
@@ -238,9 +248,13 @@ export function createAuthRoutes(container: ApiContainer): Hono {
     const [provider, username] = session.userId.split(':');
     const isAdmin = provider && username ? allowedUserRepo.isAdmin(provider, normalizeUsername(username)) : false;
 
-    // Self-heal: if a legacy session pre-dates the trial table, create one now.
-    trialService.ensureTrial(session.userId);
-    const trial = trialService.getStatus(session.userId);
+    const trial = billingConfig.enabled
+      ? (() => {
+          // Self-heal when billing is enabled and a legacy session pre-dates the trial table.
+          trialService.ensureTrial(session.userId);
+          return createBillingAccessStatus(trialService.getStatus(session.userId));
+        })()
+      : createFreeAccessStatus();
 
     return c.json({ authenticated: true, userId: session.userId, isAdmin, trial });
   });
@@ -253,18 +267,12 @@ export function createAuthRoutes(container: ApiContainer): Hono {
     const sessionId = getCookie(c, 'session');
     const session = sessionId ? sessionRepo.findById(sessionId) : undefined;
     if (!session || new Date(session.expiresAt) < new Date()) {
-      return c.json({
-        state: 'none',
-        trialStartedAt: null,
-        trialExpiresAt: null,
-        subscriptionExpiresAt: null,
-        plan: null,
-        daysRemaining: 0,
-        hasAiAccess: false,
-      });
+      return c.json(createAnonymousAccessStatus(billingConfig));
     }
+    if (!billingConfig.enabled) return c.json(createFreeAccessStatus());
+
     trialService.ensureTrial(session.userId);
-    return c.json(trialService.getStatus(session.userId));
+    return c.json(createBillingAccessStatus(trialService.getStatus(session.userId)));
   });
 
   return app;

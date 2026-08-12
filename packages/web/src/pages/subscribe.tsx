@@ -1,8 +1,20 @@
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useTrial } from '../hooks/use-api';
+import { getSubscriptionRedirect } from '../utils/billing';
 
 export function SubscribePage() {
   const { data: trial } = useTrial();
+
+  if (!trial) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg)] text-[var(--color-text-secondary)]">
+        Loading...
+      </div>
+    );
+  }
+
+  const redirect = getSubscriptionRedirect(trial);
+  if (redirect) return <Navigate to={redirect} replace />;
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text-primary)] px-4 py-10">
@@ -18,11 +30,11 @@ export function SubscribePage() {
             Keep using Planner AI
           </h1>
           <p className="text-[var(--color-text-secondary)]">
-            {trial?.state === 'trial_expired'
+            {trial.state === 'trial_expired'
               ? 'Your 7-day free trial has ended. Pick a plan to continue using the AI assistant.'
-              : trial?.state === 'active'
+              : trial.state === 'active'
                 ? 'You have an active subscription. Thank you for supporting Planner!'
-                : `You're on the free trial — ${trial?.daysRemaining ?? 0} day${trial?.daysRemaining === 1 ? '' : 's'} left. You can subscribe any time.`}
+                : `You're on the free trial — ${trial.daysRemaining} day${trial.daysRemaining === 1 ? '' : 's'} left. You can subscribe any time.`}
           </p>
         </header>
 
